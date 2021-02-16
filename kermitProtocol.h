@@ -24,6 +24,7 @@ struct kermitBit
 // Human readable kermit package
 typedef struct kermitHuman
 {
+  unsigned int inicio;
   unsigned int dest;
   unsigned int orig;
   unsigned int tam;
@@ -36,26 +37,20 @@ typedef struct kermitHuman
 void resetPackage(kermitHuman *package);
 
 // Espera o pacote ser recebido
-int waitPackage(char *buffer, int soquete);
+int waitPackage(kermitHuman *package, int soquete);
 
-int waitACK(char *buffer, int soquete);
+int waitACK(kermitHuman *package, int soquete);
 
 // Prepara e envia o buffer
-int sendBuffer(char *buffer, struct kermitBit *packageBit, int tam_data, int soquete);
+int sendPackage(kermitHuman *package, int soquete);
 
 // Recebe o buffer
-int receiveBuffer(char *buffer, int soquete);
-
-int verificaBits(unsigned char c, unsigned int num);
-
-void readPackageBit(kermitHuman *package, struct kermitBit *packageBit);
-
-void writePackageBit(struct kermitBit *packageBit, kermitHuman *package);
+int receivePackage(kermitHuman *package, int soquete);
 
 // Envia mensagem de acknowledge
-void sendACK(char *buffer, int *seq, int soquete, int dest, int orig);
+void sendACK(int *seq, int soquete, int dest, int orig);
 
 // Envia mensagem de NOT acknowledge
-void sendNACK(char *buffer, int *seq, int soquete, int dest, int orig);
+void sendNACK(int *seq, int soquete, int dest, int orig);
 
 #endif

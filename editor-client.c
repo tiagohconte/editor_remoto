@@ -24,9 +24,6 @@ int main()
 
   soquete = conexaoRawSocket(device);
 
-  char *buffer = (char*) malloc(TAM_PACKAGE);
-  memset(buffer, 0, TAM_PACKAGE);
-
   char comando[10] = "";
 
   kermitHuman package;
@@ -49,8 +46,8 @@ int main()
 
     } else if (strncmp(comando, "ls", 2) == 0)
     {
-      comando_ls(buffer, &seq, soquete);
-      
+      comando_ls(&seq, soquete);
+
     } else if (strncmp(comando, "lls", 3) == 0)
     {
       printf("lls\n");

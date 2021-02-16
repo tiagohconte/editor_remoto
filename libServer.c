@@ -16,10 +16,10 @@
 #include "libServer.h"
 
 //  Comando ls - server side
-void comando_ls(char *buffer, int *seq, int soquete)
+void comando_ls(int seq, int soquete)
 {  
   kermitHuman package;
-  struct kermitBit packageBit;  
+
   FILE *retorno = NULL;
   char str[15];
 
@@ -33,30 +33,61 @@ void comando_ls(char *buffer, int *seq, int soquete)
     fgets(str, 15, retorno);
     printf("%s", str);   
 
+    package.inicio = 126;
     package.dest = 1;
     package.orig = 2;
     package.tam = strlen(str);
-    package.seq = *seq;
+    package.seq = ++seq;
     package.tipo = 11;
     package.par = 0;
     package.data = malloc(package.tam);
     strncpy(package.data, str, package.tam);
-
-    //transforma para bits
-    writePackageBit(&packageBit, &package);
+    seq++;
 
     int espera = 0;
-    while( espera != 1 )
+    while( !espera )
     {
       // prepara e envia o buffer
-      if( sendBuffer(buffer, &packageBit, package.tam, soquete) == -1 )
+      if( sendPackage(&package, soquete) == -1 )
         exit(-1);
 
-      espera = waitACK(buffer, soquete);
+      sleep(1);
+
+      /*// espera receber os dados do comando ls
+      if( waitPackage(&package, soquete) == -1 ){
+        //sendNACK(seq, soquete, 2, 1);
+      } else {
+        // verifica se o destino está correto e se o tipo é ls
+        if( (package.dest == 1) && (package.seq == seq) && ((package.tipo == 11) || (package.tipo == 13)) ){
+          // fim do ls
+          if( package.tipo == 13 ){  
+            terminou = 1;
+          } else {
+            printf("%s", package.data);
+          }
+
+          sendACK(seq, soquete, 2, 1);
+        } else {
+          //sendNACK(seq, soquete, 2, 1);        
+        }
+      }*/
+      
     }
 
-    sleep(1);
-
   }
+
+  // prepara o pacote de final de transmissão
+  package.inicio = 126;
+  package.dest = 1;
+  package.orig = 2;
+  package.tam = 0;
+  package.seq = seq++;
+  package.tipo = 13;
+  package.par = 0;
+  free(package.data);
+  package.data = NULL;
+  // envia pacote de final de transmissão
+  if( sendPackage(&package, soquete) == -1 )
+    exit(-1);
 
 }

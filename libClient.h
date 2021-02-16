@@ -11,6 +11,6 @@
 #ifndef __LIBCLIENT__
 #define __LIBCLIENT__
 
-void comando_ls(char *buffer, int *seq, int soquete);
+void comando_ls(int *seq, int soquete);
 
 #endif

@@ -34,17 +34,13 @@ int main()
   {
     resetPackage(&package);
 
-    if( receiveBuffer(buffer, soquete) < 0 )
+    if( receivePackage(&package, soquete) < 0 )
       exit(-1);
-
-    struct kermitBit *packageBit = (struct kermitBit *) buffer;
 
     // printf("buffer: %s\n", buffer);
 
-    if( verificaBits(packageBit->header[0], 126) )
-    {
-      readPackageBit(&package, packageBit);  
-
+    if( package.inicio == 126 )
+    {  
       printf("dest: %d, orig: %d, tam: %d\n", package.dest, package.orig, package.tam);
       printf("seq: %d, tipo: %d\n", package.seq, package.tipo);
       printf("data: %s, par: %d\n", package.data, package.par);
@@ -61,7 +57,7 @@ int main()
 
       } else if (package.tipo == 1) // comando ls
       {
-        comando_ls(buffer, &seq, soquete);
+        comando_ls(package.seq, soquete);
 
       } else if (package.tipo == 2) // comando ver
       {
@@ -81,8 +77,6 @@ int main()
       }
     }
 
-    // para não ler a mesma mensagem 2 vezes
-    receiveBuffer(buffer, soquete);    
   }  
 
   return 0;

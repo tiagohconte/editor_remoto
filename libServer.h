@@ -11,6 +11,6 @@
 #ifndef __LIBSERVER__
 #define __LIBSERVER__
 
-void comando_ls(char *buffer, int *seq, int soquete);
+void comando_ls(int seq, int soquete);
 
 #endif
