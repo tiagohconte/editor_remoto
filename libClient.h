@@ -11,6 +11,6 @@
 #ifndef __LIBCLIENT__
 #define __LIBCLIENT__
 
-//void comando_ls(kermit *package);
+void comando_ls(char *buffer, int *seq, int soquete);
 
 #endif

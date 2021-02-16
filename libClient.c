@@ -15,15 +15,47 @@
 #include "kermitProtocol.h"
 #include "libClient.h"
 
-//  Comando ls do client side
-/*void comando_ls(kermit *package)
+//  Comando ls - client side
+void comando_ls(char *buffer, int *seq, int soquete)
 {  
-  package->inicio = "01111110";
-  package->end_dest = "10";
-  package->end_orig = "01";
-  package->tam = "0000";
-  package->seq = "0000";
-  package->tipo = "0001";
-  package->dados = "";
-  package->par = "00000001";
-}*/
+  kermitHuman package;
+  struct kermitBit packageBit;
+
+  package.dest = 2;
+  package.orig = 1;
+  package.tam = 0;
+  package.seq = *seq;
+  package.tipo = 1;
+  package.par = 0;
+  package.data = NULL;
+
+  writePackageBit(&packageBit, &package);
+  
+  if( sendBuffer(buffer, &packageBit, package.tam, soquete) < 0 )
+    exit(-1);
+
+  int terminou = 0;
+
+  while( !terminou )
+  {
+    // para não ler a mensagem enviada por ele mesmo
+    sleep(1);
+    // memset(buffer, 0, TAM_PACKAGE);
+    resetPackage(&package);
+
+    // espera receber os dados do comando ls
+    if( waitPackage(buffer, soquete) == -1 ){
+      sendNACK(buffer, seq, soquete, 2, 1);
+    } else {
+      printf("buffer: %s\n", buffer);
+      struct kermitBit *packageBit = (struct kermitBit *) buffer;
+      readPackageBit(&package, packageBit);
+      if( package.tipo == 13 )
+        terminou++;
+      sendACK(buffer, seq, soquete, 2, 1);
+    }
+
+  }
+
+
+}

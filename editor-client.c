@@ -23,17 +23,20 @@ int main()
   int soquete;
 
   soquete = conexaoRawSocket(device);
-  //printf("%d\n", soquete);
 
   char *buffer = (char*) malloc(TAM_PACKAGE);
   memset(buffer, 0, TAM_PACKAGE);
 
   char comando[10] = "";
 
+  kermitHuman package;
+  int seq = 0;
+
   while(1) 
   {
+    resetPackage(&package);
     
-    /*scanf("%s", comando);
+    scanf("%s", comando);
 
     //  Verifica o comando dado pelo usuário
     if(strncmp(comando, "cd ", 2) == 0)
@@ -46,8 +49,8 @@ int main()
 
     } else if (strncmp(comando, "ls", 2) == 0)
     {
-      comando_ls(&package);
-
+      comando_ls(buffer, &seq, soquete);
+      
     } else if (strncmp(comando, "lls", 3) == 0)
     {
       printf("lls\n");
@@ -68,40 +71,41 @@ int main()
     {
       printf("edit\n");
 
+    } else if (strncmp(comando, "exit", 4) == 0)
+    {
+      printf("Finalizando client.\n");
+      return 1;
     } else {
       printf("Comando inválido!\n");
-    }*/
+    }
 
-    // printf("Escreva uma mensagem: ");
-    // scanf("%s", buffer); 
+    // writePackageBit(&packageBit, &package);
 
-
-    /* TESTES */   
-
-    struct kermitBit package;
-    package.header[0] = '~';
-    package.header[1] = 148;
-    package.header[2] = 242;
-    strncpy(package.data, "hola", 5);
-    package.data[4] = 8;
+    /* TESTES */  
     
-    //  Coleta header
-    strncpy(buffer, (char *) package.header, 3);
-    strncpy(buffer+3, (char *) package.data, 5);
+    /*packageBit.header[0] = '~';
+    packageBit.header[1] = 148;
+    packageBit.header[2] = 242;
+    strncpy(packageBit.data, "hola", 5);
+    packageBit.data[4] = 8;*/
+    
+    //  Bufferiza header e dados
+    // strncpy(buffer, (char *) packageBit.header, 3);
+    // strncpy(buffer+3, (char *) packageBit.data, package.tam+1);
 
     /* FIM DOS TESTES */
 
-    if( write(soquete, buffer, TAM_PACKAGE) == -1 )
+    /*if( write(soquete, buffer, TAM_PACKAGE) == -1 )
     {
       fprintf(stderr, "Erro no envio: %s\n", strerror(errno));
       exit(-1);
-    }
+    }*/
 
     // #if DEBUG
     // printf("Mensagem enviada com sucesso!\n");
     // #endif
 
-    sleep(10);
+    // sleep(10);
   }
 
   return 0;
