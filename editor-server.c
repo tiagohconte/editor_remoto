@@ -57,7 +57,7 @@ int main()
 
       } else if (package.tipo == 1) // comando ls
       {
-        comando_ls(package.seq, soquete);
+        comando_ls(&seq, soquete);
 
       } else if (package.tipo == 2) // comando ver
       {

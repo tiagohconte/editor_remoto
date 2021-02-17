@@ -48,9 +48,9 @@ int sendPackage(kermitHuman *package, int soquete);
 int receivePackage(kermitHuman *package, int soquete);
 
 // Envia mensagem de acknowledge
-void sendACK(int *seq, int soquete, int dest, int orig);
+void sendACK(int dest, int orig, int soquete);
 
 // Envia mensagem de NOT acknowledge
-void sendNACK(int *seq, int soquete, int dest, int orig);
+void sendNACK(int dest, int orig, int soquete);
 
 #endif

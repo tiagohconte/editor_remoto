@@ -10,9 +10,8 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <unistd.h>
-#include <errno.h>
 #include <string.h>
+#include <unistd.h>
 #include "rawSocket.h"
 #include "kermitProtocol.h"
 #include "libClient.h"
@@ -24,7 +23,8 @@ int main()
 
   soquete = conexaoRawSocket(device);
 
-  char comando[10] = "";
+  char cwd[100];
+  char comando[8] = "";
 
   kermitHuman package;
   int seq = 0;
@@ -32,17 +32,18 @@ int main()
   while(1) 
   {
     resetPackage(&package);
-    
+
+    printf("%s > ", getcwd(cwd, 100));    
     scanf("%s", comando);
 
     //  Verifica o comando dado pelo usuário
-    if(strncmp(comando, "cd ", 2) == 0)
+    if(strncmp(comando, "cd", 2) == 0)
     {
-      printf("cd\n");
+      comando_cd();
 
-    } else if (strncmp(comando, "lcd ", 3) == 0)
+    } else if (strncmp(comando, "lcd", 3) == 0)
     {
-      printf("lcd\n");
+      comando_lcd();      
 
     } else if (strncmp(comando, "ls", 2) == 0)
     {
@@ -50,7 +51,7 @@ int main()
 
     } else if (strncmp(comando, "lls", 3) == 0)
     {
-      printf("lls\n");
+      comando_lls();
 
     } else if (strncmp(comando, "ver", 3) == 0)
     {
@@ -73,7 +74,7 @@ int main()
       printf("Finalizando client.\n");
       return 1;
     } else {
-      printf("Comando inválido!\n");
+      printf("%s é um comando inválido!\n", comando);
     }
 
     // writePackageBit(&packageBit, &package);

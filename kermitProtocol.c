@@ -58,6 +58,8 @@ int sendPackage(kermitHuman *package, int soquete)
     return(-1);
   }
 
+  read(soquete, buffer, TAM_PACKAGE);
+
   #ifdef DEBUG
   printf("\nENVIADO\n");
   printf("dest: %d, orig: %d, tam: %d\n", package->dest, package->orig, package->tam);
@@ -119,7 +121,7 @@ int receivePackage(kermitHuman *package, int soquete)
 }
 
 // Envia mensagem de acknowledge
-void sendACK(int *seq, int soquete, int dest, int orig)
+void sendACK(int dest, int orig, int soquete)
 {  
   kermitHuman package;
 
@@ -127,7 +129,7 @@ void sendACK(int *seq, int soquete, int dest, int orig)
   package.dest = dest;
   package.orig = orig;
   package.tam = 0;
-  package.seq = *seq;
+  package.seq = 0;
   package.tipo = 8;
   package.par = 0;
   package.data = NULL;
@@ -138,7 +140,7 @@ void sendACK(int *seq, int soquete, int dest, int orig)
 }
 
 // Envia mensagem de NOT acknowledge
-void sendNACK(int *seq, int soquete, int dest, int orig)
+void sendNACK(int dest, int orig, int soquete)
 {  
   kermitHuman package;
 
@@ -146,7 +148,7 @@ void sendNACK(int *seq, int soquete, int dest, int orig)
   package.dest = dest;
   package.orig = orig;
   package.tam = 0;
-  package.seq = *seq;
+  package.seq = 0;
   package.tipo = 9;
   package.par = 0;
   package.data = NULL;
