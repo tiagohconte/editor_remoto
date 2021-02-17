@@ -97,4 +97,9 @@ void comando_ls(int *seq, int soquete)
     
   }
 
+  if( *seq > 14 )
+    *seq = 0;
+  else
+    (*seq)++;
+
 }

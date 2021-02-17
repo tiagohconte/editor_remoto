@@ -73,6 +73,7 @@ void comando_ls(int *seq, int soquete)
   if( sendPackage(&package, soquete) < 0 )
     exit(-1);
 
+  int primeiro = 1;
   // quando tipo = 13, acabou a transmissão do ls
   while( package.tipo != 13 )
   {
@@ -84,17 +85,29 @@ void comando_ls(int *seq, int soquete)
       exit(-1);
     } else 
     {
-      // verifica se o destino está correto e se o tipo é ls
-      if( (package.dest == 1) )
+      // se for o primeiro pacote recebido, sequencia é setada
+      if( primeiro && (package.dest == 1) && ( (package.tipo == 11) || (package.tipo == 13) ) ){
+        *seq = package.seq;
+        primeiro = 0;
+      }
+
+      // verifica se o destino está correto, a sequência e se o tipo é ls
+      if( (package.dest == 1) && (package.seq == *seq) )
       {
 
-        if( package.tipo == 11 )
+        if( (package.tipo == 11) || (package.tipo == 13) )
         {
-          printf("%s", package.data);
+          if( package.tipo == 11 ){
+            printf("%s", package.data);
+          }
+
           sendACK(2, 1, soquete);
-        } 
-        else if( package.tipo == 13 )
-          sendACK(2, 1, soquete);
+
+          if( *seq > 14 )
+            *seq = 0;
+          else
+            (*seq)++;
+        }
         else
           sendNACK(2, 1, soquete);
 

@@ -36,15 +36,10 @@ int main()
 
     if( receivePackage(&package, soquete) < 0 )
       exit(-1);
-
-    // printf("buffer: %s\n", buffer);
-
-    if( package.inicio == 126 )
-    {  
-      printf("dest: %d, orig: %d, tam: %d\n", package.dest, package.orig, package.tam);
-      printf("seq: %d, tipo: %d\n", package.seq, package.tipo);
-      printf("data: %s, par: %d\n", package.data, package.par);
-    }
+    
+    printf("dest: %d, orig: %d, tam: %d\n", package.dest, package.orig, package.tam);
+    printf("seq: %d, tipo: %d\n", package.seq, package.tipo);
+    printf("data: %s, par: %d\n", package.data, package.par);
 
     // Verifica se o destino é mesmo o servidor
     if( package.dest == 2 )
