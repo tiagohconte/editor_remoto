@@ -39,7 +39,7 @@ int main()
     //  Verifica o comando dado pelo usuário
     if(strncmp(comando, "cd", 2) == 0)
     {
-      comando_cd();
+      comando_cd(&seq, soquete);
 
     } else if (strncmp(comando, "lcd", 3) == 0)
     {
@@ -71,39 +71,12 @@ int main()
 
     } else if (strncmp(comando, "exit", 4) == 0)
     {
-      printf("Finalizando client.\n");
+      printf("Finalizando client\n");
       return 1;
     } else {
       printf("%s é um comando inválido!\n", comando);
     }
 
-    // writePackageBit(&packageBit, &package);
-
-    /* TESTES */  
-    
-    /*packageBit.header[0] = '~';
-    packageBit.header[1] = 148;
-    packageBit.header[2] = 242;
-    strncpy(packageBit.data, "hola", 5);
-    packageBit.data[4] = 8;*/
-    
-    //  Bufferiza header e dados
-    // strncpy(buffer, (char *) packageBit.header, 3);
-    // strncpy(buffer+3, (char *) packageBit.data, package.tam+1);
-
-    /* FIM DOS TESTES */
-
-    /*if( write(soquete, buffer, TAM_PACKAGE) == -1 )
-    {
-      fprintf(stderr, "Erro no envio: %s\n", strerror(errno));
-      exit(-1);
-    }*/
-
-    // #if DEBUG
-    // printf("Mensagem enviada com sucesso!\n");
-    // #endif
-
-    // sleep(10);
   }
 
   return 0;

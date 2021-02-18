@@ -50,8 +50,48 @@ void comando_lls()
 
 // Comando cd - client side
 // Executa change directory no server
-void comando_cd()
+void comando_cd(int *seq, int soquete)
 {
+  kermitHuman packageSend, packageRec;
+
+  char dir[15];
+  scanf("%s", dir);
+
+  packageSend.inicio = 126;
+  packageSend.dest = 2;
+  packageSend.orig = 1;
+  packageSend.tam = strlen(dir);
+  packageSend.seq = 0;
+  packageSend.tipo = 0;
+  packageSend.par = 0;
+  packageSend.data = malloc(packageSend.tam);
+  strncpy(packageSend.data, dir, packageSend.tam);
+
+  if( sendPackage(&packageSend, soquete) < 0 )
+    exit(-1);
+
+  // quando tipo = 8, sucesso no comando cd
+  // quando tipo = 15, houve erro
+  resetPackage(&packageRec);
+  while( (packageRec.tipo != 8) && (packageRec.tipo != 15))
+  {
+    resetPackage(&packageRec);
+
+    // espera receber pacote
+    if( waitPackage(&packageRec, soquete) == -1 )
+      exit(-1);
+
+    // se pacote for NACK, envia o pacote novamente
+    if( packageRec.tipo == 9 ){
+      if( sendPackage(&packageSend, soquete) < 0 )
+        exit(-1);
+    }
+  }
+
+  if( packageRec.tipo == 15 )
+  {
+    printError(&packageRec);
+  }
 
 }
 
@@ -101,7 +141,7 @@ void comando_ls(int *seq, int soquete)
             printf("%s", package.data);
           }
 
-          sendACK(2, 1, soquete);
+          sendACK(package.orig, package.dest, soquete);
 
           if( *seq > 14 )
             *seq = 0;
@@ -109,11 +149,11 @@ void comando_ls(int *seq, int soquete)
             (*seq)++;
         }
         else
-          sendNACK(2, 1, soquete);
+          sendNACK(package.orig, package.dest, soquete);
 
       } else 
       {    
-        sendNACK(2, 1, soquete);
+        sendNACK(package.orig, package.dest, soquete);
       }
     }
 

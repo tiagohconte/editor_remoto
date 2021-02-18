@@ -39,8 +39,6 @@ void resetPackage(kermitHuman *package);
 // Espera o pacote ser recebido
 int waitPackage(kermitHuman *package, int soquete);
 
-int waitACK(kermitHuman *package, int soquete);
-
 // Prepara e envia o buffer
 int sendPackage(kermitHuman *package, int soquete);
 
@@ -52,5 +50,11 @@ void sendACK(int dest, int orig, int soquete);
 
 // Envia mensagem de NOT acknowledge
 void sendNACK(int dest, int orig, int soquete);
+
+// Envia mensagem de error
+void sendError(int dest, int orig, int tipo, int error, int soquete);
+
+// Imprime mensagem de erro
+void printError(kermitHuman *package);
 
 #endif

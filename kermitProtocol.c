@@ -27,6 +27,20 @@ void resetPackage(kermitHuman *package)
   package->data = NULL;
 }
 
+// Espera o pacote com o inicio 01111110 ser recebido
+int waitPackage(kermitHuman *package, int soquete)
+{
+  resetPackage(package);
+
+  while( package->inicio != 126 )
+  {
+    if( receivePackage(package, soquete) < 0 )
+      return(-1);
+  }
+  
+  return 1;
+}
+
 // Prepara e envia o buffer
 int sendPackage(kermitHuman *package, int soquete)
 {
@@ -158,17 +172,48 @@ void sendNACK(int dest, int orig, int soquete)
 
 }
 
-// Espera o pacote com o inicio 01111110 ser recebido
-int waitPackage(kermitHuman *package, int soquete)
+// Envia mensagem de error
+void sendError(int dest, int orig, int tipo, int error, int soquete)
 {
-  resetPackage(package);
+  kermitHuman package;
 
-  while( package->inicio != 126 )
-  {
-    if( receivePackage(package, soquete) < 0 )
-      return(-1);
-  }
-  
-  return 1;
+  package.data = malloc(1);
 
+  if( (error == 13) || (error == 1) )
+    strcpy(package.data, "1");
+  else if( ((error == 2) && (tipo == 0)) || (error == 20) )
+    strcpy(package.data, "2");
+  else if( (error == 2) )
+    strcpy(package.data, "3");
+  else
+    strcpy(package.data, "0");
+
+  package.inicio = 126;
+  package.dest = dest;
+  package.orig = orig;
+  package.tam = 1;
+  package.seq = 0;
+  package.tipo = 15;
+  package.par = 0;  
+
+  if( sendPackage(&package, soquete) < 0 )
+    exit(-1);
+
+  free(package.data);
+  package.data = NULL;
 }
+
+// Imprime mensagem de erro
+void printError(kermitHuman *package)
+{
+  if( strcmp(package->data, "1") == 0 ){
+    printf("Acesso proibido \n");
+  } else if( strcmp(package->data, "2") == 0 ){
+    printf("Diretório inexistente\n");
+  } else if( strcmp(package->data, "3") == 0 ){
+    printf("Arquivo inexistente\n");
+  } else {
+    printf("Ocorreu algum erro!\n");
+  }
+}
+

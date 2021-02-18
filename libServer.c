@@ -12,10 +12,29 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <errno.h>
 #include "kermitProtocol.h"
 #include "libServer.h"
 
-//  Comando ls - server side
+// Comando cd - server side
+// Executa change directory no server
+void comando_cd(kermitHuman *package, int *seq, int soquete)
+{
+  
+  if( chdir(package->data) ){
+    sendError(package->orig, package->dest, package->tipo, errno, soquete);
+    return;
+  }
+
+  sendACK(package->orig, package->dest, soquete);
+
+  free(package->data);
+  package->data = NULL;
+
+}
+
+// Comando ls - server side
+// Executa ls no server
 void comando_ls(int *seq, int soquete)
 {  
   kermitHuman package;
@@ -31,8 +50,7 @@ void comando_ls(int *seq, int soquete)
   }
 
   fgets(str, 15, retorno);
-  while(!feof(retorno)){
-    // printf("%s", str);   
+  while(!feof(retorno)){ 
 
     package.inicio = 126;
     package.dest = 1;

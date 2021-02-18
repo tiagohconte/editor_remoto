@@ -22,7 +22,7 @@ void comando_lls();
 
 // Comando cd - client side
 // Executa change directory no server
-void comando_cd();
+void comando_cd(int *seq, int soquete);
 // Comando ls - client side
 // Executa ls no server
 void comando_ls(int *seq, int soquete);
