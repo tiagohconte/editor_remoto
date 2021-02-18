@@ -61,7 +61,7 @@ void comando_cd(int *seq, int soquete)
   packageSend.dest = 2;
   packageSend.orig = 1;
   packageSend.tam = strlen(dir);
-  packageSend.seq = 0;
+  packageSend.seq = *seq;
   packageSend.tipo = 0;
   packageSend.par = 0;
   packageSend.data = malloc(packageSend.tam);
@@ -69,6 +69,8 @@ void comando_cd(int *seq, int soquete)
 
   if( sendPackage(&packageSend, soquete) < 0 )
     exit(-1);
+
+  incrementaSeq(seq);
 
   // quando tipo = 8, sucesso no comando cd
   // quando tipo = 15, houve erro
@@ -105,7 +107,7 @@ void comando_ls(int *seq, int soquete)
   package.dest = 2;
   package.orig = 1;
   package.tam = 0;
-  package.seq = 0;
+  package.seq = *seq;
   package.tipo = 1;
   package.par = 0;
   package.data = NULL;
@@ -113,7 +115,9 @@ void comando_ls(int *seq, int soquete)
   if( sendPackage(&package, soquete) < 0 )
     exit(-1);
 
-  int primeiro = 1;
+  incrementaSeq(seq);
+
+  int seqEsperada = -1;
   // quando tipo = 13, acabou a transmissão do ls
   while( package.tipo != 13 )
   {
@@ -126,13 +130,12 @@ void comando_ls(int *seq, int soquete)
     } else 
     {
       // se for o primeiro pacote recebido, sequencia é setada
-      if( primeiro && (package.dest == 1) && ( (package.tipo == 11) || (package.tipo == 13) ) ){
-        *seq = package.seq;
-        primeiro = 0;
+      if( (seqEsperada == -1) && (package.dest == 1) && ( (package.tipo == 11) || (package.tipo == 13) ) ){
+        seqEsperada = package.seq;
       }
 
       // verifica se o destino está correto, a sequência e se o tipo é ls
-      if( (package.dest == 1) && (package.seq == *seq) )
+      if( (package.dest == 1) && (package.seq == seqEsperada) )
       {
 
         if( (package.tipo == 11) || (package.tipo == 13) )
@@ -141,19 +144,16 @@ void comando_ls(int *seq, int soquete)
             printf("%s", package.data);
           }
 
-          sendACK(package.orig, package.dest, soquete);
+          sendACK(package.orig, package.dest, seq, soquete);
 
-          if( *seq > 14 )
-            *seq = 0;
-          else
-            (*seq)++;
+          incrementaSeq(&seqEsperada);
         }
         else
-          sendNACK(package.orig, package.dest, soquete);
+          sendNACK(package.orig, package.dest, seq, soquete);
 
       } else 
       {    
-        sendNACK(package.orig, package.dest, soquete);
+        sendNACK(package.orig, package.dest, seq, soquete);
       }
     }
 

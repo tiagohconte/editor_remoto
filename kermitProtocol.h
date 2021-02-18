@@ -46,15 +46,18 @@ int sendPackage(kermitHuman *package, int soquete);
 int receivePackage(kermitHuman *package, int soquete);
 
 // Envia mensagem de acknowledge
-void sendACK(int dest, int orig, int soquete);
+void sendACK(int dest, int orig, int *seq, int soquete);
 
 // Envia mensagem de NOT acknowledge
-void sendNACK(int dest, int orig, int soquete);
+void sendNACK(int dest, int orig, int *seq, int soquete);
 
 // Envia mensagem de error
-void sendError(int dest, int orig, int tipo, int error, int soquete);
+void sendError(int dest, int orig, int *seq, int tipo, int error, int soquete);
 
 // Imprime mensagem de erro
 void printError(kermitHuman *package);
+
+// Incrementa sequencia
+void incrementaSeq(int *seq);
 
 #endif

@@ -135,7 +135,7 @@ int receivePackage(kermitHuman *package, int soquete)
 }
 
 // Envia mensagem de acknowledge
-void sendACK(int dest, int orig, int soquete)
+void sendACK(int dest, int orig, int *seq, int soquete)
 {  
   kermitHuman package;
 
@@ -143,7 +143,7 @@ void sendACK(int dest, int orig, int soquete)
   package.dest = dest;
   package.orig = orig;
   package.tam = 0;
-  package.seq = 0;
+  package.seq = *seq;
   package.tipo = 8;
   package.par = 0;
   package.data = NULL;
@@ -151,10 +151,11 @@ void sendACK(int dest, int orig, int soquete)
   if( sendPackage(&package, soquete) < 0 )
     exit(-1);
 
+  incrementaSeq(seq);
 }
 
 // Envia mensagem de NOT acknowledge
-void sendNACK(int dest, int orig, int soquete)
+void sendNACK(int dest, int orig, int *seq, int soquete)
 {  
   kermitHuman package;
 
@@ -162,7 +163,7 @@ void sendNACK(int dest, int orig, int soquete)
   package.dest = dest;
   package.orig = orig;
   package.tam = 0;
-  package.seq = 0;
+  package.seq = *seq;
   package.tipo = 9;
   package.par = 0;
   package.data = NULL;
@@ -170,10 +171,11 @@ void sendNACK(int dest, int orig, int soquete)
   if( sendPackage(&package, soquete) < 0 )
     exit(-1);
 
+  incrementaSeq(seq);
 }
 
 // Envia mensagem de error
-void sendError(int dest, int orig, int tipo, int error, int soquete)
+void sendError(int dest, int orig, int *seq, int tipo, int error, int soquete)
 {
   kermitHuman package;
 
@@ -192,12 +194,14 @@ void sendError(int dest, int orig, int tipo, int error, int soquete)
   package.dest = dest;
   package.orig = orig;
   package.tam = 1;
-  package.seq = 0;
+  package.seq = *seq;
   package.tipo = 15;
   package.par = 0;  
 
   if( sendPackage(&package, soquete) < 0 )
     exit(-1);
+
+  incrementaSeq(seq);
 
   free(package.data);
   package.data = NULL;
@@ -215,5 +219,14 @@ void printError(kermitHuman *package)
   } else {
     printf("Ocorreu algum erro!\n");
   }
+}
+
+// Incrementa sequencia
+void incrementaSeq(int *seq)
+{
+  if( *seq > 14 )
+    *seq = 0;
+  else
+    (*seq)++;
 }
 

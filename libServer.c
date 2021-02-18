@@ -22,11 +22,11 @@ void comando_cd(kermitHuman *package, int *seq, int soquete)
 {
   
   if( chdir(package->data) ){
-    sendError(package->orig, package->dest, package->tipo, errno, soquete);
+    sendError(package->orig, package->dest, seq, package->tipo, errno, soquete);
     return;
   }
 
-  sendACK(package->orig, package->dest, soquete);
+  sendACK(package->orig, package->dest, seq, soquete);
 
   free(package->data);
   package->data = NULL;
@@ -80,10 +80,7 @@ void comando_ls(int *seq, int soquete)
 
     fgets(str, 15, retorno);
 
-    if( *seq > 14 )
-      *seq = 0;
-    else
-      (*seq)++;
+    incrementaSeq(seq);
 
   }
 
@@ -115,9 +112,6 @@ void comando_ls(int *seq, int soquete)
     
   }
 
-  if( *seq > 14 )
-    *seq = 0;
-  else
-    (*seq)++;
+  incrementaSeq(seq);
 
 }
