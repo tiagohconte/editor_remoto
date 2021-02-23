@@ -29,3 +29,4 @@ digitado entre aspas.
 
 ## Funcionalidades à implementar
 - Paridade Vertical para detecção de erros.
+- Timeout
