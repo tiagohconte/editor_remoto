@@ -59,7 +59,7 @@ int main()
 
     } else if (strncmp(comando, "linha", 5) == 0)
     {
-      printf("linha\n");
+      comando_linha(&seq, soquete);;
 
     } else if (strncmp(comando, "linhas", 6) == 0)
     {

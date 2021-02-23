@@ -56,7 +56,7 @@ int main()
 
       } else if (package.tipo == 3) // comando linha
       {
-        printf("linha\n");
+        comando_linha(&package, &seq, soquete);
 
       } else if (package.tipo == 4)  // comando linhas
       {

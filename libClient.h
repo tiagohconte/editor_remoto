@@ -33,4 +33,8 @@ void comando_ls(int *seq, int soquete);
 // Mostra o conteúdo do arquivo texto do servidor na tela do cliente
 void comando_ver(int *seq, int soquete);
 
+// Comando linha - client side
+// Mostra a linha <numero_linha> do arquivo <nome_arq> que esta no servidor na tela do cliente.
+void comando_linha(int *seq, int soquete);
+
 #endif

@@ -254,3 +254,129 @@ void comando_ver(int *seq, int soquete)
   printf("\n");
 
 }
+
+// Comando linha - client side
+// Mostra a linha <numero_linha> do arquivo <nome_arq> que esta no servidor na tela do cliente.
+void comando_linha(int *seq, int soquete)
+{
+  kermitHuman packageSend, packageRec;
+
+  char linha[15];
+  scanf("%s", linha);
+
+  char arq[15];
+  scanf("%s", arq);
+
+  packageSend.inicio = 126;
+  packageSend.dest = 2;
+  packageSend.orig = 1;
+  packageSend.tam = strlen(arq);
+  packageSend.seq = *seq;
+  packageSend.tipo = 3;
+  packageSend.par = 0;
+  packageSend.data = malloc(packageSend.tam);
+  strncpy(packageSend.data, arq, packageSend.tam);
+
+  if( sendPackage(&packageSend, soquete) < 0 )
+    exit(-1);
+
+  // quando tipo = 8, sucesso no pacote inicial do comando linha
+  // quando tipo = 15, houve erro
+  resetPackage(&packageRec);
+  while( (packageRec.tipo != 8) && (packageRec.tipo != 15))
+  {
+    resetPackage(&packageRec);
+
+    // espera receber pacote
+    if( waitPackage(&packageRec, soquete) == -1 )
+      exit(-1);
+
+    // se pacote for NACK, envia o pacote novamente
+    if( packageRec.tipo == 9 ){
+      if( sendPackage(&packageSend, soquete) < 0 )
+        exit(-1);
+    }
+  }
+
+  incrementaSeq(seq);
+
+  // caso tenha dado erro, finaliza a função
+  if( packageRec.tipo == 15 )
+  {
+    printError(&packageRec);
+    return;
+  }
+
+  // envia a linha desejada
+  packageSend.inicio = 126;
+  packageSend.dest = 2;
+  packageSend.orig = 1;
+  packageSend.tam = strlen(linha);
+  packageSend.seq = *seq;
+  packageSend.tipo = 10;
+  packageSend.par = 0;
+  packageSend.data = malloc(packageSend.tam);
+  strncpy(packageSend.data, linha, packageSend.tam);
+
+  if( sendPackage(&packageSend, soquete) < 0 )
+    exit(-1);
+
+  int seqEsperada = packageRec.seq;
+  incrementaSeq(&seqEsperada);
+
+  resetPackage(&packageRec);
+  // espera receber os dados do comando ver
+  if( waitPackage(&packageRec, soquete) == -1 ){
+    exit(-1);
+  }
+
+  // quando tipo = 13, acabou a transmissão
+  // quando tipo = 15, houve erro
+  if( packageRec.tipo != 15 )
+    printf("%s ", linha);
+
+  while( packageRec.tipo != 13 && packageRec.tipo != 15 )
+  {
+    
+    // verifica se o destino está correto
+    if( packageRec.dest == packageSend.orig )
+    {
+      
+      // verifica a sequência 
+      if( packageRec.seq == seqEsperada )
+      {
+        // verifica se o tipo é conteúdo arquivo
+        if( (packageRec.tipo == 12) )
+        {         
+          printf("%s", packageRec.data);        
+
+          sendACK(packageRec.orig, packageRec.dest, seq, soquete);
+
+          incrementaSeq(&seqEsperada);
+        }
+        else
+          sendNACK(packageRec.orig, packageRec.dest, seq, soquete);
+
+      } else 
+      {    
+        sendNACK(packageRec.orig, packageRec.dest, seq, soquete);
+      }
+    }
+
+    resetPackage(&packageRec);
+
+    // espera receber os dados do comando ver
+    if( waitPackage(&packageRec, soquete) == -1 ){
+      exit(-1);
+    }
+  }
+
+  // verifica se o tipo é erro
+  if( (packageRec.tipo == 15) )
+    printError(&packageRec);
+  else{
+    sendACK(packageRec.orig, packageRec.dest, seq, soquete);
+    printf("\n");
+  }
+  
+}
