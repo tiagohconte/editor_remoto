@@ -10,8 +10,8 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 #include <unistd.h>
+#include <string.h>
 #include "rawSocket.h"
 #include "kermitProtocol.h"
 #include "libClient.h"
@@ -55,7 +55,7 @@ int main()
 
     } else if (strncmp(comando, "ver", 3) == 0)
     {
-      printf("ver\n");
+      comando_ver(&seq, soquete);
 
     } else if (strncmp(comando, "linha", 5) == 0)
     {

@@ -8,16 +8,16 @@ Editor Remoto desenvolvido como trabalho final da disciplina Redes de Computador
 4. No outro terminal, execute `./editor-client`
 5. O programa está pronto para ser utilizado!
 
-## Comandos disponíveis
-Os comandos devem ser executados no _cliente_  
+## Comandos implementados
+Os comandos devem ser executados no _cliente_
+- `exit`: finaliza o cliente.  
 - `cd <nome_dir>`: efetua a troca de diretório no servidor.
 - `lcd <nome_dir>`: efetua a troca de diretório no cliente.
 - `ls`: lista os arquivos do diretório corrente do servidor.
 - `lls`: lista os arquivos do diretório corrente do cliente.
-- `exit`: finaliza o cliente.
-
-## Comandos à adicionar
 - `ver <nome_arq>` - mostra o conteúdo do arquivo texto do servidor na tela do cliente.
+
+## Comandos à implementar
 - `linha <numero_linha> <nome_arq>` - mostra a linha _numero_linha_ do arquivo
 _nome_arq_, que está no servidor, na tela do cliente.
 - `linhas <numero_linha_inicial> <numero_linha_final> <nome_arq>` - mostra as linhas

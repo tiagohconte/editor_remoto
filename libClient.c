@@ -70,8 +70,6 @@ void comando_cd(int *seq, int soquete)
   if( sendPackage(&packageSend, soquete) < 0 )
     exit(-1);
 
-  incrementaSeq(seq);
-
   // quando tipo = 8, sucesso no comando cd
   // quando tipo = 15, houve erro
   resetPackage(&packageRec);
@@ -88,7 +86,9 @@ void comando_cd(int *seq, int soquete)
       if( sendPackage(&packageSend, soquete) < 0 )
         exit(-1);
     }
-  }
+  }  
+
+  incrementaSeq(seq);
 
   if( packageRec.tipo == 15 )
   {
@@ -101,62 +101,156 @@ void comando_cd(int *seq, int soquete)
 // Executa ls no server
 void comando_ls(int *seq, int soquete)
 {  
-  kermitHuman package;
+  kermitHuman packageSend, packageRec;
 
-  package.inicio = 126;
-  package.dest = 2;
-  package.orig = 1;
-  package.tam = 0;
-  package.seq = *seq;
-  package.tipo = 1;
-  package.par = 0;
-  package.data = NULL;
+  packageSend.inicio = 126;
+  packageSend.dest = 2;
+  packageSend.orig = 1;
+  packageSend.tam = 0;
+  packageSend.seq = *seq;
+  packageSend.tipo = 1;
+  packageSend.par = 0;
+  packageSend.data = NULL;
   
-  if( sendPackage(&package, soquete) < 0 )
+  if( sendPackage(&packageSend, soquete) < 0 )
     exit(-1);
 
   incrementaSeq(seq);
 
   int seqEsperada = -1;
+  resetPackage(&packageRec);
   // quando tipo = 13, acabou a transmissão do ls
-  while( package.tipo != 13 )
+  while( packageRec.tipo != 13 )
   {
 
-    resetPackage(&package);
+    resetPackage(&packageRec);
 
     // espera receber os dados do comando ls
-    if( waitPackage(&package, soquete) == -1 ){
+    if( waitPackage(&packageRec, soquete) == -1 ){
       exit(-1);
     } else 
     {
-      // se for o primeiro pacote recebido, sequencia é setada
-      if( (seqEsperada == -1) && (package.dest == 1) && ( (package.tipo == 11) || (package.tipo == 13) ) ){
-        seqEsperada = package.seq;
-      }
-
-      // verifica se o destino está correto, a sequência e se o tipo é ls
-      if( (package.dest == 1) && (package.seq == seqEsperada) )
+      // verifica se o destino está correto
+      if( packageRec.dest == packageSend.orig )
       {
-
-        if( (package.tipo == 11) || (package.tipo == 13) )
-        {
-          if( package.tipo == 11 ){
-            printf("%s", package.data);
-          }
-
-          sendACK(package.orig, package.dest, seq, soquete);
-
-          incrementaSeq(&seqEsperada);
+        // se for o primeiro pacote recebido, sequencia é setada
+        if( (seqEsperada == -1) && ( (packageRec.tipo == 11) || (packageRec.tipo == 13) ) ){
+          seqEsperada = packageRec.seq;
         }
-        else
-          sendNACK(package.orig, package.dest, seq, soquete);
 
-      } else 
-      {    
-        sendNACK(package.orig, package.dest, seq, soquete);
+        // verifica a sequência e se o tipo é ls
+        if( (packageRec.seq == seqEsperada) )
+        {
+
+          if( (packageRec.tipo == 11) || (packageRec.tipo == 13) )
+          {
+            if( packageRec.tipo == 11 ){
+              printf("%s", packageRec.data);
+            }
+
+            sendACK(packageRec.orig, packageRec.dest, seq, soquete);
+
+            incrementaSeq(&seqEsperada);
+          }
+          else
+            sendNACK(packageRec.orig, packageRec.dest, seq, soquete);
+
+        } else 
+        {    
+          sendNACK(packageRec.orig, packageRec.dest, seq, soquete);
+        }
       }
     }
 
   }
+
+}
+
+// Comando ver - client side
+// Mostra o conteúdo do arquivo texto do servidor na tela do cliente
+void comando_ver(int *seq, int soquete)
+{  
+  kermitHuman packageSend, packageRec;
+
+  char arq[15];
+  scanf("%s", arq);
+
+  packageSend.inicio = 126;
+  packageSend.dest = 2;
+  packageSend.orig = 1;
+  packageSend.tam = strlen(arq);
+  packageSend.seq = *seq;
+  packageSend.tipo = 2;
+  packageSend.par = 0;
+  packageSend.data = malloc(packageSend.tam);
+  strncpy(packageSend.data, arq, packageSend.tam);
+
+  if( sendPackage(&packageSend, soquete) < 0 )
+    exit(-1);
+
+  incrementaSeq(seq);
+
+  int seqEsperada = -1;
+  int linha = 1;
+
+  resetPackage(&packageRec);
+  // espera receber os dados do comando ver
+  if( waitPackage(&packageRec, soquete) == -1 ){
+    exit(-1);
+  }
+
+  // quando tipo = 13, acabou a transmissão
+  // quando tipo = 15, houve erro
+  while( packageRec.tipo != 13 && packageRec.tipo != 15 )
+  {
+    
+    // verifica se o destino está correto
+    if( packageRec.dest == packageSend.orig )
+    {
+      // se for o primeiro pacote recebido, sequencia é setada
+      if( (seqEsperada == -1) && ( (packageRec.tipo == 12) || (packageRec.tipo == 13) ) ){
+        seqEsperada = packageRec.seq;
+        
+        printf("%d ", linha++);
+      }
+
+      // verifica a sequência 
+      if( packageRec.seq == seqEsperada )
+      {
+        // verifica se o tipo é conteúdo arquivo
+        if( (packageRec.tipo == 12) )
+        {         
+          printf("%s", packageRec.data);
+          if(packageRec.data[strlen(packageRec.data)-1] == '\n')
+            printf("%d ", linha++);          
+
+          sendACK(packageRec.orig, packageRec.dest, seq, soquete);
+
+          incrementaSeq(&seqEsperada);
+        }
+        else
+          sendNACK(packageRec.orig, packageRec.dest, seq, soquete);
+
+      } else 
+      {    
+        sendNACK(packageRec.orig, packageRec.dest, seq, soquete);
+      }
+    }
+
+    resetPackage(&packageRec);
+
+    // espera receber os dados do comando ver
+    if( waitPackage(&packageRec, soquete) == -1 ){
+      exit(-1);
+    }
+  }
+
+  // verifica se o tipo é erro
+  if( (packageRec.tipo == 15) )
+    printError(&packageRec);
+  else
+    sendACK(packageRec.orig, packageRec.dest, seq, soquete);
+
+  printf("\n");
 
 }

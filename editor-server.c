@@ -11,8 +11,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <errno.h>
 #include <string.h>
+#include <errno.h>
 #include "rawSocket.h"
 #include "kermitProtocol.h"
 #include "libServer.h"
@@ -52,7 +52,7 @@ int main()
 
       } else if (package.tipo == 2) // comando ver
       {
-        printf("ver\n");
+        comando_ver(&package, &seq, soquete);
 
       } else if (package.tipo == 3) // comando linha
       {
