@@ -185,8 +185,10 @@ void sendError(int dest, int orig, int *seq, int tipo, int error, int soquete)
     strcpy(package.data, "1");
   else if( ((error == 2) && (tipo == 0)) || (error == 20) )
     strcpy(package.data, "2");
-  else if( (error == 2) )
+  else if( error == 2 )
     strcpy(package.data, "3");
+  else if( (error == -1) )
+    strcpy(package.data, "4");
   else
     strcpy(package.data, "0");
 
@@ -216,6 +218,8 @@ void printError(kermitHuman *package)
     printf("Diretório inexistente\n");
   } else if( strcmp(package->data, "3") == 0 ){
     printf("Arquivo inexistente\n");
+  } else if( strcmp(package->data, "4") == 0 ){
+    printf("Linha inexistente\n");
   } else {
     printf("Ocorreu algum erro!\n");
   }

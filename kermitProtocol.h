@@ -12,7 +12,6 @@
 #define __KERMITPROTOCOL__
 
 #define TAM_PACKAGE 19  // tamanho máximo do pacote, em bytes
-#define TIMEOUT 5 // tentativas até timeout
 
 // Buffer kermit package
 struct kermitBit
