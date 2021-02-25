@@ -12,12 +12,13 @@
 #define __KERMITPROTOCOL__
 
 #define TAM_PACKAGE 19  // tamanho máximo do pacote, em bytes
+#define TAM_DATA 15     // tamanho máximo do campo de dados, em bytes
 
 // Buffer kermit package
 struct kermitBit
 {
   unsigned char header[3];     // possui 24 bits
-  char data[16];     // 15 bytes de dados + 1 byte de paridade
+  char data[TAM_DATA+1];     // 15 bytes de dados + 1 byte de paridade
 };
 
 // Human readable kermit package
