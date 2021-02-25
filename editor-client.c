@@ -26,14 +26,12 @@ int main()
   char cwd[100];
   char comando[8] = "";
 
-  kermitHuman package;
   int seq = 0;
 
   while(1) 
   {
-    resetPackage(&package);
 
-    printf("%s > ", getcwd(cwd, 100));    
+    printf("client:%s > ", getcwd(cwd, 100));    
     scanf("%s", comando);
 
     //  Verifica o comando dado pelo usuário
@@ -59,7 +57,7 @@ int main()
 
     } else if (strncmp(comando, "linha", 5) == 0)
     {
-      comando_linha(&seq, soquete);;
+      comando_linha(&seq, soquete);
 
     } else if (strncmp(comando, "linhas", 6) == 0)
     {
