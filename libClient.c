@@ -54,8 +54,9 @@ void comando_cd(int *seq, int soquete)
 {
   kermitHuman packageSend, packageRec;
 
-  char dir[15];
+  char dir[TAM_DATA+1];
   scanf("%s", dir);
+  dir[TAM_DATA] = '\0';
 
   packageSend.inicio = 126;
   packageSend.dest = 2;
@@ -65,7 +66,7 @@ void comando_cd(int *seq, int soquete)
   packageSend.tipo = 0;
   packageSend.par = 0;
   packageSend.data = malloc(packageSend.tam);
-  strncpy(packageSend.data, dir, packageSend.tam);
+  memcpy(packageSend.data, dir, packageSend.tam);
 
   if( sendPackage(&packageSend, soquete) < 0 )
     exit(-1);
@@ -183,7 +184,7 @@ void comando_ver(int *seq, int soquete)
   packageSend.tipo = 2;
   packageSend.par = 0;
   packageSend.data = malloc(packageSend.tam);
-  strncpy(packageSend.data, arq, packageSend.tam);
+  memcpy(packageSend.data, arq, packageSend.tam);
 
   if( sendPackage(&packageSend, soquete) < 0 )
     exit(-1);
@@ -221,7 +222,7 @@ void comando_ver(int *seq, int soquete)
         if( (packageRec.tipo == 12) )
         {         
           printf("%s", packageRec.data);
-          if(packageRec.data[strlen(packageRec.data)-1] == '\n')
+          if( packageRec.data[strlen( (char*) packageRec.data )-1] == '\n' )
             printf("%d ", linha++);          
 
           sendACK(packageRec.orig, packageRec.dest, seq, soquete);
@@ -261,11 +262,12 @@ void comando_linha(int *seq, int soquete)
 {
   kermitHuman packageSend, packageRec;
 
-  char linha[15];
-  scanf("%s", linha);
-
-  char arq[15];
+  unsigned int linha;
+  scanf("%d", &linha);
+  
+  char arq[TAM_DATA+1];
   scanf("%s", arq);
+  arq[TAM_DATA] = '\0';
 
   packageSend.inicio = 126;
   packageSend.dest = 2;
@@ -275,7 +277,7 @@ void comando_linha(int *seq, int soquete)
   packageSend.tipo = 3;
   packageSend.par = 0;
   packageSend.data = malloc(packageSend.tam);
-  strncpy(packageSend.data, arq, packageSend.tam);
+  memcpy(packageSend.data, arq, packageSend.tam);
 
   if( sendPackage(&packageSend, soquete) < 0 )
     exit(-1);
@@ -311,12 +313,15 @@ void comando_linha(int *seq, int soquete)
   packageSend.inicio = 126;
   packageSend.dest = 2;
   packageSend.orig = 1;
-  packageSend.tam = strlen(linha);
+  packageSend.tam = 2;    // tamanho necessário para armazenar UM inteiro
   packageSend.seq = *seq;
   packageSend.tipo = 10;
   packageSend.par = 0;
+  // aloca espaço para dados e insere os bytes dos numeros inteiros
   packageSend.data = malloc(packageSend.tam);
-  strncpy(packageSend.data, linha, packageSend.tam);
+  // pega bytes da esquerda e direita e transforma em unsigned char
+  packageSend.data[0] = (unsigned char) ((linha >> 8) & 0xff); 
+  packageSend.data[1] = (unsigned char) (linha & 0xff);
 
   if( sendPackage(&packageSend, soquete) < 0 )
     exit(-1);
@@ -333,7 +338,7 @@ void comando_linha(int *seq, int soquete)
   // quando tipo = 13, acabou a transmissão
   // quando tipo = 15, houve erro
   if( packageRec.tipo != 15 )
-    printf("%s ", linha);
+    printf("%d ", linha);
 
   while( packageRec.tipo != 13 && packageRec.tipo != 15 )
   {
@@ -379,4 +384,140 @@ void comando_linha(int *seq, int soquete)
     printf("\n");
   }
   
+}
+
+// Comando linhas - client side
+// Mostra as linhas entre a <numero_linha_inicial> e <numero_linha_final> do arquivo <nome_arq>, que está no servidor, na tela do cliente.
+void comando_linhas(int *seq, int soquete)
+{
+
+  kermitHuman packageSend, packageRec;
+
+  unsigned int linha_inicial;
+  scanf("%d", &linha_inicial);
+
+  unsigned int linha_final;
+  scanf("%d", &linha_final);
+
+  char arq[TAM_DATA+1];
+  scanf("%s", arq);
+  arq[TAM_DATA] = '\0';
+
+  packageSend.inicio = 126;
+  packageSend.dest = 2;
+  packageSend.orig = 1;
+  packageSend.tam = strlen(arq);
+  packageSend.seq = *seq;
+  packageSend.tipo = 4;
+  packageSend.par = 0;
+  packageSend.data = malloc(packageSend.tam);
+  memcpy(packageSend.data, arq, packageSend.tam);
+
+  if( sendPackage(&packageSend, soquete) < 0 )
+    exit(-1);  
+
+  // quando tipo = 8, sucesso no pacote inicial do comando linhas
+  // quando tipo = 15, houve erro
+  resetPackage(&packageRec);
+  while( (packageRec.tipo != 8) && (packageRec.tipo != 15))
+  {
+    resetPackage(&packageRec);
+
+    // espera receber pacote
+    if( waitPackage(&packageRec, soquete) == -1 )
+      exit(-1);
+
+    // se pacote for NACK, envia o pacote novamente
+    if( packageRec.tipo == 9 ){
+      if( sendPackage(&packageSend, soquete) < 0 )
+        exit(-1);
+    }
+  }
+
+  incrementaSeq(seq);
+
+  // caso tenha dado erro, imprime o erro e finaliza a função
+  if( packageRec.tipo == 15 )
+  {
+    printError(&packageRec);
+    return;
+  }
+
+  // envia as linhas desejadas
+  packageSend.inicio = 126;
+  packageSend.dest = 2;
+  packageSend.orig = 1;
+  packageSend.tam = 4;    // tamanho necessário para armazenar dois inteiros
+  packageSend.seq = *seq;
+  packageSend.tipo = 10;
+  packageSend.par = 0;
+  // aloca espaço para dados e insere os bytes dos numeros inteiros
+  packageSend.data = malloc(packageSend.tam);
+  // pega bytes da esquerda e direita e transforma em char
+  packageSend.data[0] = (unsigned char) ((linha_inicial >> 8) & 0xff); 
+  packageSend.data[1] = (unsigned char) (linha_inicial & 0xff);
+  packageSend.data[2] = (unsigned char) ((linha_final >> 8) & 0xff); 
+  packageSend.data[3] = (unsigned char) (linha_final & 0xff);
+
+  if( sendPackage(&packageSend, soquete) < 0 )
+    exit(-1);
+
+  int seqEsperada = packageRec.seq;
+  incrementaSeq(&seqEsperada);
+
+  // resetPackage(&packageRec);
+  // // espera receber os dados do comando ver
+  // if( waitPackage(&packageRec, soquete) == -1 ){
+  //   exit(-1);
+  // }
+
+  // // quando tipo = 13, acabou a transmissão
+  // // quando tipo = 15, houve erro
+  // if( packageRec.tipo != 15 )
+  //   printf("%s ", linha);
+
+  // while( packageRec.tipo != 13 && packageRec.tipo != 15 )
+  // {
+    
+  //   // verifica se o destino está correto
+  //   if( packageRec.dest == packageSend.orig )
+  //   {
+      
+  //     // verifica a sequência 
+  //     if( packageRec.seq == seqEsperada )
+  //     {
+  //       // verifica se o tipo é conteúdo arquivo
+  //       if( (packageRec.tipo == 12) )
+  //       {         
+  //         printf("%s", packageRec.data);        
+
+  //         sendACK(packageRec.orig, packageRec.dest, seq, soquete);
+
+  //         incrementaSeq(&seqEsperada);
+  //       }
+  //       else
+  //         sendNACK(packageRec.orig, packageRec.dest, seq, soquete);
+
+  //     } else 
+  //     {    
+  //       sendNACK(packageRec.orig, packageRec.dest, seq, soquete);
+  //     }
+  //   }
+
+  //   resetPackage(&packageRec);
+
+  //   // espera receber os dados do comando ver
+  //   if( waitPackage(&packageRec, soquete) == -1 ){
+  //     exit(-1);
+  //   }
+  // }
+
+  // // verifica se o tipo é erro
+  // if( (packageRec.tipo == 15) )
+  //   printError(&packageRec);
+  // else{
+  //   sendACK(packageRec.orig, packageRec.dest, seq, soquete);
+  //   printf("\n");
+  // }
+
 }

@@ -44,7 +44,7 @@ int waitPackage(kermitHuman *package, int soquete)
 // Prepara e envia o buffer
 int sendPackage(kermitHuman *package, int soquete)
 {
-  char buffer[TAM_PACKAGE];
+  unsigned char buffer[TAM_PACKAGE];
   memset(buffer, 0, TAM_PACKAGE);
   struct kermitBit packageBit;
 
@@ -59,12 +59,12 @@ int sendPackage(kermitHuman *package, int soquete)
 
   if( package->tam > 0 )
   {
-    strncpy(packageBit.data, package->data, package->tam);    
+    memcpy(packageBit.data, package->data, package->tam);    
   }
   packageBit.data[package->tam] = (unsigned char) package->par;
 
-  strncpy(buffer, (char *) packageBit.header, 3);
-  strncpy(buffer+3, (char *) packageBit.data, package->tam+1);
+  memcpy(buffer, (unsigned char *) packageBit.header, 3);
+  memcpy(buffer+3, (unsigned char *) packageBit.data, package->tam+1);
 
   if( write(soquete, buffer, TAM_PACKAGE) == -1 )
   {
@@ -88,7 +88,7 @@ int sendPackage(kermitHuman *package, int soquete)
 // Recebe o buffer
 int receivePackage(kermitHuman *package, int soquete)
 {  
-  char buffer[TAM_PACKAGE];
+  unsigned char buffer[TAM_PACKAGE];
   memset(buffer, 0, TAM_PACKAGE);
 
   int tamBuffer = read(soquete, buffer, TAM_PACKAGE);
@@ -114,8 +114,8 @@ int receivePackage(kermitHuman *package, int soquete)
   // coleta os 4 bits menos significativos do 3° byte, onde está o tipo
   package->tipo = (unsigned char) packageBit->header[2] & 0x0F;
 
-  package->data = (char *) malloc(package->tam);
-  strncpy(package->data, packageBit->data, package->tam);
+  package->data = (unsigned char *) malloc(package->tam);
+  memcpy(package->data, packageBit->data, package->tam);
 
   package->par = (unsigned char) packageBit->data[package->tam];
 
@@ -179,18 +179,19 @@ void sendError(int dest, int orig, int *seq, int tipo, int error, int soquete)
 {
   kermitHuman package;
 
-  package.data = malloc(1);
+  unsigned char error_code = 0;
 
   if( (error == 13) || (error == 1) )
-    strcpy(package.data, "1");
+    error_code = 1;
   else if( ((error == 2) && (tipo == 0)) || (error == 20) )
-    strcpy(package.data, "2");
+    error_code = 2;
   else if( error == 2 )
-    strcpy(package.data, "3");
+    error_code = 3;
   else if( (error == -1) )
-    strcpy(package.data, "4");
-  else
-    strcpy(package.data, "0");
+    error_code = 4;
+
+  package.data = malloc(1);
+  package.data[0] = (unsigned char) (error_code & 0xff);
 
   package.inicio = 126;
   package.dest = dest;
@@ -212,13 +213,13 @@ void sendError(int dest, int orig, int *seq, int tipo, int error, int soquete)
 // Imprime mensagem de erro
 void printError(kermitHuman *package)
 {
-  if( strcmp(package->data, "1") == 0 ){
+  if( package->data[0] == 1 ){
     printf("Acesso proibido \n");
-  } else if( strcmp(package->data, "2") == 0 ){
+  } else if( package->data[0] == 2 ){
     printf("Diretório inexistente\n");
-  } else if( strcmp(package->data, "3") == 0 ){
+  } else if( package->data[0] == 3 ){
     printf("Arquivo inexistente\n");
-  } else if( strcmp(package->data, "4") == 0 ){
+  } else if( package->data[0] == 4 ){
     printf("Linha inexistente\n");
   } else {
     printf("Ocorreu algum erro!\n");

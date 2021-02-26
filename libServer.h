@@ -27,4 +27,8 @@ void comando_ver(kermitHuman *package, int *seq, int soquete);
 // Mostra a linha <numero_linha> do arquivo <nome_arq> que esta no servidor na tela do cliente.
 void comando_linha(kermitHuman *package, int *seq, int soquete);
 
+// Comando linhas - server side
+// Mostra as linhas entre a <numero_linha_inicial> e <numero_linha_final> do arquivo <nome_arq>, que está no servidor, na tela do cliente.
+void comando_linha(kermitHuman *package, int *seq, int soquete);
+
 #endif

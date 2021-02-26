@@ -21,7 +21,7 @@
 void comando_cd(kermitHuman *package, int *seq, int soquete)
 {
   
-  if( chdir(package->data) ){
+  if( chdir( (char*)package->data ) ){
     sendError(package->orig, package->dest, seq, package->tipo, errno, soquete);
     return;
   }
@@ -40,7 +40,7 @@ void comando_ls(int *seq, int soquete)
   kermitHuman package;
 
   FILE *retorno;
-  char str[16];
+  char str[TAM_DATA+1];
   int espera;
 
   // executa ls no servidor
@@ -49,7 +49,7 @@ void comando_ls(int *seq, int soquete)
     fprintf(stderr, "Erro na execução do comando!\n");
   }
 
-  fgets(str, 16, retorno);
+  fgets(str, TAM_DATA+1, retorno);
   while(!feof(retorno)){ 
 
     package.inicio = 126;
@@ -60,7 +60,7 @@ void comando_ls(int *seq, int soquete)
     package.tipo = 11;
     package.par = 0;
     package.data = malloc(package.tam);
-    strncpy(package.data, str, package.tam);
+    memcpy(package.data, str, package.tam);
 
     espera = 0;
     while( !espera )
@@ -78,7 +78,7 @@ void comando_ls(int *seq, int soquete)
       
     }
 
-    fgets(str, 16, retorno);
+    fgets(str, TAM_DATA+1, retorno);
 
     incrementaSeq(seq);
 
@@ -126,17 +126,17 @@ void comando_ver(kermitHuman *package, int *seq, int soquete)
   FILE *arquivo;
 
   // abre <ARQUIVO> no servidor
-  arquivo = fopen(package->data, "r");
+  arquivo = fopen((char*) package->data, "r");
   if (arquivo == NULL){
     sendError(package->orig, package->dest, seq, package->tipo, errno, soquete);
     return;
   }
 
-  char str[16];
+  char str[TAM_DATA+1];
   int espera;
 
   while(!feof(arquivo)){ 
-    fgets(str, 16, arquivo);
+    fgets(str, TAM_DATA+1, arquivo);
 
     packageSend.inicio = 126;
     packageSend.dest = 1;
@@ -146,7 +146,7 @@ void comando_ver(kermitHuman *package, int *seq, int soquete)
     packageSend.tipo = 12;
     packageSend.par = 0;
     packageSend.data = malloc(packageSend.tam);
-    strncpy(packageSend.data, str, packageSend.tam);
+    memcpy(packageSend.data, str, packageSend.tam);
 
     espera = 0;
     while( !espera )
@@ -209,11 +209,12 @@ void comando_linha(kermitHuman *package, int *seq, int soquete)
   kermitHuman packageSend, packageRec;
 
   FILE *arquivo;
-  char str[16];
-  int espera, cont = 1, linha;
-
+  char str[TAM_DATA+1];
+  int espera, cont = 1;
+  unsigned int linha;
+  
   // abre <ARQUIVO> no servidor
-  arquivo = fopen(package->data, "r");
+  arquivo = fopen((char*) package->data, "r");
   if (arquivo == NULL){
     sendError(package->orig, package->dest, seq, package->tipo, errno, soquete);
     return;
@@ -235,7 +236,8 @@ void comando_linha(kermitHuman *package, int *seq, int soquete)
     
   }
 
-  linha = strtol(packageRec.data, NULL, 10);
+  // pega bytes da esquerda e direita e transforma em unsigned int
+  linha = (unsigned int) ((packageRec.data[0] << 8) | (packageRec.data[1]));
 
   // se a linha for menor que 1, ela não existe
   if( linha < 1 )
@@ -247,7 +249,7 @@ void comando_linha(kermitHuman *package, int *seq, int soquete)
 
   // encontra a linha e a envia
   while( (!feof(arquivo)) && (cont <= linha) ){
-    fgets(str, 16, arquivo);
+    fgets(str, TAM_DATA+1, arquivo);
 
 
     if( cont == linha )
@@ -261,7 +263,7 @@ void comando_linha(kermitHuman *package, int *seq, int soquete)
       packageSend.tipo = 12;
       packageSend.par = 0;
       packageSend.data = malloc(packageSend.tam);
-      strncpy(packageSend.data, str, packageSend.tam);
+      memcpy(packageSend.data, str, packageSend.tam);
 
       espera = 0;
       while( !espera )
@@ -326,4 +328,11 @@ void comando_linha(kermitHuman *package, int *seq, int soquete)
   }
 
   incrementaSeq(seq);
+}
+
+// Comando linhas - server side
+// Mostra as linhas entre a <numero_linha_inicial> e <numero_linha_final> do arquivo <nome_arq>, que está no servidor, na tela do cliente.
+void comando_linhas(kermitHuman *package, int *seq, int soquete)
+{
+
 }

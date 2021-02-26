@@ -18,7 +18,7 @@
 struct kermitBit
 {
   unsigned char header[3];     // possui 24 bits
-  char data[TAM_DATA+1];     // 15 bytes de dados + 1 byte de paridade
+  unsigned char data[TAM_DATA+1];     // 15 bytes de dados + 1 byte de paridade
 };
 
 // Human readable kermit package
@@ -31,7 +31,7 @@ typedef struct kermitHuman
   unsigned int seq;
   unsigned int tipo;
   unsigned int par;
-  char *data;
+  unsigned char *data;
 } kermitHuman;
 
 void resetPackage(kermitHuman *package);

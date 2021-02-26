@@ -61,7 +61,7 @@ int main()
 
     } else if (strncmp(comando, "linhas", 6) == 0)
     {
-      printf("linhas\n");
+      comando_linhas(&seq, soquete);
 
     } else if (strncmp(comando, "edit", 4) == 0)
     {
