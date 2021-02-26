@@ -55,13 +55,13 @@ int main()
     {
       comando_ver(&seq, soquete);
 
-    } else if (strncmp(comando, "linha", 5) == 0)
-    {
-      comando_linha(&seq, soquete);
-
     } else if (strncmp(comando, "linhas", 6) == 0)
     {
       comando_linhas(&seq, soquete);
+
+    } else if (strncmp(comando, "linha", 5) == 0)
+    {
+      comando_linha(&seq, soquete);
 
     } else if (strncmp(comando, "edit", 4) == 0)
     {

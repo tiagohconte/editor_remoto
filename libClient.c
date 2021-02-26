@@ -447,7 +447,7 @@ void comando_linhas(int *seq, int soquete)
   packageSend.inicio = 126;
   packageSend.dest = 2;
   packageSend.orig = 1;
-  packageSend.tam = 4;    // tamanho necessário para armazenar dois inteiros
+  packageSend.tam = 4;    // tamanho necessário para armazenar DOIS inteiros
   packageSend.seq = *seq;
   packageSend.tipo = 10;
   packageSend.par = 0;
@@ -465,59 +465,69 @@ void comando_linhas(int *seq, int soquete)
   int seqEsperada = packageRec.seq;
   incrementaSeq(&seqEsperada);
 
-  // resetPackage(&packageRec);
-  // // espera receber os dados do comando ver
-  // if( waitPackage(&packageRec, soquete) == -1 ){
-  //   exit(-1);
-  // }
+  resetPackage(&packageRec);
+  // espera receber os dados do comando ver
+  if( waitPackage(&packageRec, soquete) == -1 ){
+    exit(-1);
+  }
 
-  // // quando tipo = 13, acabou a transmissão
-  // // quando tipo = 15, houve erro
-  // if( packageRec.tipo != 15 )
-  //   printf("%s ", linha);
+  // quando tipo = 13, acabou a transmissão
+  // quando tipo = 15, houve erro
+  /*if( packageRec.tipo != 15 )
+    printf("%d ", linha_inicial);*/
 
-  // while( packageRec.tipo != 13 && packageRec.tipo != 15 )
-  // {
+  int linha = linha_inicial, imprime_linha = 1;
+
+  while( packageRec.tipo != 13 && packageRec.tipo != 15 )
+  {    
+
+    if( imprime_linha ){
+      printf("%d ", linha++);
+      imprime_linha = 0;
+    }
     
-  //   // verifica se o destino está correto
-  //   if( packageRec.dest == packageSend.orig )
-  //   {
+    // verifica se o destino está correto
+    if( packageRec.dest == packageSend.orig )
+    {
       
-  //     // verifica a sequência 
-  //     if( packageRec.seq == seqEsperada )
-  //     {
-  //       // verifica se o tipo é conteúdo arquivo
-  //       if( (packageRec.tipo == 12) )
-  //       {         
-  //         printf("%s", packageRec.data);        
+      // verifica a sequência 
+      if( packageRec.seq == seqEsperada )
+      {
+        // verifica se o tipo é conteúdo arquivo
+        if( (packageRec.tipo == 12) )
+        {         
+          printf("%s", packageRec.data);                        
 
-  //         sendACK(packageRec.orig, packageRec.dest, seq, soquete);
+          sendACK(packageRec.orig, packageRec.dest, seq, soquete);
 
-  //         incrementaSeq(&seqEsperada);
-  //       }
-  //       else
-  //         sendNACK(packageRec.orig, packageRec.dest, seq, soquete);
+          incrementaSeq(&seqEsperada);
+        }
+        else
+          sendNACK(packageRec.orig, packageRec.dest, seq, soquete);
 
-  //     } else 
-  //     {    
-  //       sendNACK(packageRec.orig, packageRec.dest, seq, soquete);
-  //     }
-  //   }
+      } else 
+      {    
+        sendNACK(packageRec.orig, packageRec.dest, seq, soquete);
+      }
+    }
 
-  //   resetPackage(&packageRec);
+    if( packageRec.data[strlen( (char*) packageRec.data )-1] == '\n' )
+      imprime_linha = 1;
 
-  //   // espera receber os dados do comando ver
-  //   if( waitPackage(&packageRec, soquete) == -1 ){
-  //     exit(-1);
-  //   }
-  // }
+    resetPackage(&packageRec);
 
-  // // verifica se o tipo é erro
-  // if( (packageRec.tipo == 15) )
-  //   printError(&packageRec);
-  // else{
-  //   sendACK(packageRec.orig, packageRec.dest, seq, soquete);
-  //   printf("\n");
-  // }
+    // espera receber os dados do comando ver
+    if( waitPackage(&packageRec, soquete) == -1 ){
+      exit(-1);
+    }
+  }
+
+  // verifica se o tipo é erro
+  if( (packageRec.tipo == 15) )
+    printError(&packageRec);
+  else{
+    sendACK(packageRec.orig, packageRec.dest, seq, soquete);
+    printf("\n");
+  }
 
 }

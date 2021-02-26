@@ -60,7 +60,7 @@ int main()
 
       } else if (package.tipo == 4)  // comando linhas
       {
-        printf("linhas\n");
+        comando_linhas(&package, &seq, soquete);
 
       } else if (package.tipo == 5)  // comando edit
       {
