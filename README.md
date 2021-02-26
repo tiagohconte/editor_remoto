@@ -18,11 +18,11 @@ Os comandos devem ser executados no _cliente_
 - `ver <nome_arq>` - mostra o conteúdo do arquivo texto do servidor na tela do cliente.
 - `linha <numero_linha> <nome_arq>` - mostra a linha _numero_linha_ do arquivo
 _nome_arq_, que está no servidor, na tela do cliente.
-
-## Comandos à implementar
 - `linhas <numero_linha_inicial> <numero_linha_final> <nome_arq>` - mostra as linhas
 entre a _numero_linha_inicial_ e _numero_linha_final_ do arquivo _nome_arq_, que
 está no servidor, na tela do cliente.
+
+## Comandos à implementar
 - `edit <numero_linha> <nome_arq> “<NOVO_TEXTO>”` – troca a linha _numero_linha_ do
 arquivo _nome_arq_, que está no servidor, pelo texto _NOVO_TEXTO_ que deve ser
 digitado entre aspas.
