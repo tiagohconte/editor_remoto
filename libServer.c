@@ -132,6 +132,7 @@ void comando_ver(kermitHuman *package, int *seq, int soquete)
 
   char str[TAM_DATA+1];
   int espera;
+  iniciaPackage(&packageRec);
 
   while(!feof(arquivo)){ 
     fgets(str, TAM_DATA+1, arquivo);
@@ -196,6 +197,10 @@ void comando_ver(kermitHuman *package, int *seq, int soquete)
 
   incrementaSeq(seq);
 
+  // Libera memória
+  resetPackage(&packageSend);
+  resetPackage(&packageRec);
+
 }
 
 // Comando linha - server side
@@ -208,6 +213,7 @@ void comando_linha(kermitHuman *package, int *seq, int soquete)
   char str[TAM_DATA+1];
   int espera, cont = 1;
   unsigned int linha;
+  iniciaPackage(&packageRec);
   
   // abre <ARQUIVO> no servidor
   arquivo = fopen((char*) package->data, "r");
@@ -321,6 +327,10 @@ void comando_linha(kermitHuman *package, int *seq, int soquete)
   }
 
   incrementaSeq(seq);
+
+  // Libera memória
+  resetPackage(&packageSend);
+  resetPackage(&packageRec);
 }
 
 // Comando linhas - server side
@@ -333,6 +343,7 @@ void comando_linhas(kermitHuman *package, int *seq, int soquete)
   char str[TAM_DATA+1];
   int espera, cont = 1;
   unsigned int linha_inicial, linha_final;
+  iniciaPackage(&packageRec);
   
   // abre <ARQUIVO> no servidor
   arquivo = fopen((char*) package->data, "r");
@@ -451,5 +462,9 @@ void comando_linhas(kermitHuman *package, int *seq, int soquete)
   }
 
   incrementaSeq(seq);
+
+  // Libera memória
+  resetPackage(&packageSend);
+  resetPackage(&packageRec);
 
 }

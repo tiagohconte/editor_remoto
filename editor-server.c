@@ -24,11 +24,9 @@ int main()
 
   soquete = conexaoRawSocket(device);
 
-  char *buffer = (char *) malloc(TAM_PACKAGE);
-  memset(buffer, 0, TAM_PACKAGE);
-
   kermitHuman package;
   int seq = 0;
+  iniciaPackage(&package);
 
   while(1) 
   {

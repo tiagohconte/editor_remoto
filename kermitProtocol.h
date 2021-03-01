@@ -34,6 +34,10 @@ typedef struct kermitHuman
   unsigned char *data;
 } kermitHuman;
 
+// Inicia o pacote
+void iniciaPackage(kermitHuman *package);
+
+// Reseta o pacote e libera espaço reservado na memória
 void resetPackage(kermitHuman *package);
 
 // Espera o pacote ser recebido

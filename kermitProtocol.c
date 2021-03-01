@@ -15,8 +15,24 @@
 #include <unistd.h>
 #include "kermitProtocol.h"
 
+// Inicia o pacote
+void iniciaPackage(kermitHuman *package)
+{
+  package->inicio = -1;
+  package->dest = -1;
+  package->orig = -1;
+  package->tam = -1;
+  package->seq = -1;
+  package->tipo = -1;
+  package->par = -1;
+  package->data = NULL;
+}
+
+// Reseta o pacote e libera espaço reservado na memória
 void resetPackage(kermitHuman *package)
 {
+  if( package->tam > 0 )
+    free(package->data);
   package->inicio = -1;
   package->dest = -1;
   package->orig = -1;
@@ -31,9 +47,10 @@ void resetPackage(kermitHuman *package)
 int waitPackage(kermitHuman *package, int soquete)
 {
   resetPackage(package);
-
+  
   while( package->inicio != 126 )
   {
+    resetPackage(package);
     if( receivePackage(package, soquete) < 0 )
       return(-1);
   }
@@ -63,9 +80,9 @@ int sendPackage(kermitHuman *package, int soquete)
   }
 
   // Calcula a paridade
-  package->par = packageBit.header[1] ^ packageBit.header[2];
+  /*package->par = (unsigned char) packageBit.header[1] ^ packageBit.header[2];
   for (int i = 0; i < package->tam; i++)  
-    package->par = package->par ^ packageBit.data[i];
+    package->par = (unsigned char) package->par ^ packageBit.data[i];*/
 
   packageBit.data[package->tam] = (unsigned char) package->par;
 
@@ -145,11 +162,13 @@ int receivePackage(kermitHuman *package, int soquete)
 // Checa a paridade do pacote
 int checaParidade(kermitHuman *package)
 {
-  unsigned char paridade = packageBit->header[1] ^ packageBit->header[2];
+  /*unsigned char paridade = packageBit->header[1] ^ packageBit->header[2];
   for (int i = 0; i < package->tam; i++)  
     paridade = paridade ^ packageBit->data[i];  
   if( paridade != packageBit->data[package->tam] )
-    return 0;
+    return 0;*/
+
+  return 1;
 }
 
 // Envia mensagem de acknowledge

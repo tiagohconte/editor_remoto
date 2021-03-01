@@ -72,7 +72,7 @@ void comando_cd(int *seq, int soquete)
 
   // quando tipo = 8, sucesso no comando cd
   // quando tipo = 15, houve erro
-  resetPackage(&packageRec);
+  iniciaPackage(&packageRec);
   while( (packageRec.tipo != 8) && (packageRec.tipo != 15))
   {
     resetPackage(&packageRec);
@@ -94,6 +94,10 @@ void comando_cd(int *seq, int soquete)
   {
     printError(&packageRec);
   }
+
+  // Libera memória
+  resetPackage(&packageSend);
+  resetPackage(&packageRec);
 
 }
 
@@ -117,7 +121,7 @@ void comando_ls(int *seq, int soquete)
   incrementaSeq(seq);
 
   int seqEsperada = -1;
-  resetPackage(&packageRec);
+  iniciaPackage(&packageRec);
   // quando tipo = 13, acabou a transmissão do ls
   while( packageRec.tipo != 13 )
   {
@@ -163,6 +167,10 @@ void comando_ls(int *seq, int soquete)
 
   }
 
+  // Libera memória
+  resetPackage(&packageSend);
+  resetPackage(&packageRec);
+
 }
 
 // Comando ver - client side
@@ -191,7 +199,7 @@ void comando_ver(int *seq, int soquete)
   int seqEsperada = -1;
   int linha = 1;
 
-  resetPackage(&packageRec);
+  iniciaPackage(&packageRec);
   // espera receber os dados do comando ver
   if( waitPackage(&packageRec, soquete) == -1 ){
     exit(-1);
@@ -251,6 +259,10 @@ void comando_ver(int *seq, int soquete)
 
   printf("\n");
 
+  // Libera memória
+  resetPackage(&packageSend);
+  resetPackage(&packageRec);
+
 }
 
 // Comando linha - client side
@@ -280,7 +292,7 @@ void comando_linha(int *seq, int soquete)
 
   // quando tipo = 8, sucesso no pacote inicial do comando linha
   // quando tipo = 15, houve erro
-  resetPackage(&packageRec);
+  iniciaPackage(&packageRec);
   while( (packageRec.tipo != 8) && (packageRec.tipo != 15))
   {
     resetPackage(&packageRec);
@@ -378,6 +390,10 @@ void comando_linha(int *seq, int soquete)
     sendACK(packageRec.orig, packageRec.dest, seq, soquete);
     printf("\n");
   }
+
+  // Libera memória
+  resetPackage(&packageSend);
+  resetPackage(&packageRec);
   
 }
 
@@ -412,7 +428,7 @@ void comando_linhas(int *seq, int soquete)
 
   // quando tipo = 8, sucesso no pacote inicial do comando linhas
   // quando tipo = 15, houve erro
-  resetPackage(&packageRec);
+  iniciaPackage(&packageRec);
   while( (packageRec.tipo != 8) && (packageRec.tipo != 15))
   {
     resetPackage(&packageRec);
@@ -522,5 +538,9 @@ void comando_linhas(int *seq, int soquete)
     sendACK(packageRec.orig, packageRec.dest, seq, soquete);
     printf("\n");
   }
+
+  // Libera memória
+  resetPackage(&packageSend);
+  resetPackage(&packageRec);
 
 }
