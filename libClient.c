@@ -64,7 +64,6 @@ void comando_cd(int *seq, int soquete)
   packageSend.tam = strlen(dir);
   packageSend.seq = *seq;
   packageSend.tipo = 0;
-  packageSend.par = 0;
   packageSend.data = malloc(packageSend.tam);
   memcpy(packageSend.data, dir, packageSend.tam);
 
@@ -110,7 +109,6 @@ void comando_ls(int *seq, int soquete)
   packageSend.tam = 0;
   packageSend.seq = *seq;
   packageSend.tipo = 1;
-  packageSend.par = 0;
   packageSend.data = NULL;
   
   if( sendPackage(&packageSend, soquete) < 0 )
@@ -182,7 +180,6 @@ void comando_ver(int *seq, int soquete)
   packageSend.tam = strlen(arq);
   packageSend.seq = *seq;
   packageSend.tipo = 2;
-  packageSend.par = 0;
   packageSend.data = malloc(packageSend.tam);
   memcpy(packageSend.data, arq, packageSend.tam);
 
@@ -275,7 +272,6 @@ void comando_linha(int *seq, int soquete)
   packageSend.tam = strlen(arq);
   packageSend.seq = *seq;
   packageSend.tipo = 3;
-  packageSend.par = 0;
   packageSend.data = malloc(packageSend.tam);
   memcpy(packageSend.data, arq, packageSend.tam);
 
@@ -316,7 +312,6 @@ void comando_linha(int *seq, int soquete)
   packageSend.tam = 2;    // tamanho necessário para armazenar UM inteiro
   packageSend.seq = *seq;
   packageSend.tipo = 10;
-  packageSend.par = 0;
   // aloca espaço para dados e insere os bytes dos numeros inteiros
   packageSend.data = malloc(packageSend.tam);
   // pega bytes da esquerda e direita e transforma em unsigned char
@@ -409,7 +404,6 @@ void comando_linhas(int *seq, int soquete)
   packageSend.tam = strlen(arq);
   packageSend.seq = *seq;
   packageSend.tipo = 4;
-  packageSend.par = 0;
   packageSend.data = malloc(packageSend.tam);
   memcpy(packageSend.data, arq, packageSend.tam);
 
@@ -450,7 +444,6 @@ void comando_linhas(int *seq, int soquete)
   packageSend.tam = 4;    // tamanho necessário para armazenar DOIS inteiros
   packageSend.seq = *seq;
   packageSend.tipo = 10;
-  packageSend.par = 0;
   // aloca espaço para dados e insere os bytes dos numeros inteiros
   packageSend.data = malloc(packageSend.tam);
   // pega bytes da esquerda e direita e transforma em char

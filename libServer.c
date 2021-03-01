@@ -58,7 +58,6 @@ void comando_ls(int *seq, int soquete)
     package.tam = strlen(str);
     package.seq = *seq;
     package.tipo = 11;
-    package.par = 0;
     package.data = malloc(package.tam);
     memcpy(package.data, str, package.tam);
 
@@ -91,7 +90,6 @@ void comando_ls(int *seq, int soquete)
   package.tam = 0;
   package.seq = *seq;
   package.tipo = 13;
-  package.par = 0;
   free(package.data);
   package.data = NULL;
 
@@ -144,7 +142,6 @@ void comando_ver(kermitHuman *package, int *seq, int soquete)
     packageSend.tam = strlen(str);
     packageSend.seq = *seq;
     packageSend.tipo = 12;
-    packageSend.par = 0;
     packageSend.data = malloc(packageSend.tam);
     memcpy(packageSend.data, str, packageSend.tam);
 
@@ -176,7 +173,6 @@ void comando_ver(kermitHuman *package, int *seq, int soquete)
   packageSend.tam = 0;
   packageSend.seq = *seq;
   packageSend.tipo = 13;
-  packageSend.par = 0;
   free(packageSend.data);
   packageSend.data = NULL;
 
@@ -260,7 +256,6 @@ void comando_linha(kermitHuman *package, int *seq, int soquete)
       packageSend.tam = strlen(str);
       packageSend.seq = *seq;
       packageSend.tipo = 12;
-      packageSend.par = 0;
       packageSend.data = malloc(packageSend.tam);
       memcpy(packageSend.data, str, packageSend.tam);
 
@@ -304,7 +299,6 @@ void comando_linha(kermitHuman *package, int *seq, int soquete)
   packageSend.tam = 0;
   packageSend.seq = *seq;
   packageSend.tipo = 13;
-  packageSend.par = 0;
   free(packageSend.data);
   packageSend.data = NULL;
 
@@ -392,7 +386,6 @@ void comando_linhas(kermitHuman *package, int *seq, int soquete)
       packageSend.tam = strlen(str);
       packageSend.seq = *seq;
       packageSend.tipo = 12;
-      packageSend.par = 0;
       packageSend.data = malloc(packageSend.tam);
       memcpy(packageSend.data, str, packageSend.tam);
 
@@ -436,7 +429,6 @@ void comando_linhas(kermitHuman *package, int *seq, int soquete)
   packageSend.tam = 0;
   packageSend.seq = *seq;
   packageSend.tipo = 13;
-  packageSend.par = 0;
   free(packageSend.data);
   packageSend.data = NULL;
 

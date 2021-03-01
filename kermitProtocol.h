@@ -39,11 +39,17 @@ void resetPackage(kermitHuman *package);
 // Espera o pacote ser recebido
 int waitPackage(kermitHuman *package, int soquete);
 
-// Prepara e envia o buffer
+// Prepara e envia o pacote
 int sendPackage(kermitHuman *package, int soquete);
 
-// Recebe o buffer
+// Recebe o pacote
+// Retorna -1 em caso de erro no recebimento
+// Retorna 0 caso não cheque a paridade
+// Retorna 1 em sucesso
 int receivePackage(kermitHuman *package, int soquete);
+
+// Checa a paridade do pacote
+int checaParidade(kermitHuman *package);
 
 // Envia mensagem de acknowledge
 void sendACK(int dest, int orig, int *seq, int soquete);

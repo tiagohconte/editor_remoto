@@ -61,6 +61,12 @@ int sendPackage(kermitHuman *package, int soquete)
   {
     memcpy(packageBit.data, package->data, package->tam);    
   }
+
+  // Calcula a paridade
+  package->par = packageBit.header[1] ^ packageBit.header[2];
+  for (int i = 0; i < package->tam; i++)  
+    package->par = package->par ^ packageBit.data[i];
+
   packageBit.data[package->tam] = (unsigned char) package->par;
 
   memcpy(buffer, (unsigned char *) packageBit.header, 3);
@@ -85,7 +91,9 @@ int sendPackage(kermitHuman *package, int soquete)
   return 1;
 }
 
-// Recebe o buffer
+// Recebe o pacote
+// Retorna -1 em caso de erro no recebimento
+// Retorna 1 em sucesso
 int receivePackage(kermitHuman *package, int soquete)
 {  
   unsigned char buffer[TAM_PACKAGE];
@@ -94,7 +102,7 @@ int receivePackage(kermitHuman *package, int soquete)
   int tamBuffer = read(soquete, buffer, TAM_PACKAGE);
   if( tamBuffer == -1 )
   {
-    fprintf(stderr, "Erro no recebimento: %s\n", strerror(errno));
+    fprintf(stderr, "Erro no recebimento do pacote: %s\n", strerror(errno));
     return(-1);
   }  
 
@@ -132,6 +140,16 @@ int receivePackage(kermitHuman *package, int soquete)
   #endif
 
   return 1;
+}
+
+// Checa a paridade do pacote
+int checaParidade(kermitHuman *package)
+{
+  unsigned char paridade = packageBit->header[1] ^ packageBit->header[2];
+  for (int i = 0; i < package->tam; i++)  
+    paridade = paridade ^ packageBit->data[i];  
+  if( paridade != packageBit->data[package->tam] )
+    return 0;
 }
 
 // Envia mensagem de acknowledge
