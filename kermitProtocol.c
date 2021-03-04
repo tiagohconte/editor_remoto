@@ -13,6 +13,7 @@
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
+#include <poll.h>
 #include "kermitProtocol.h"
 
 // Inicia o pacote
@@ -30,9 +31,8 @@ void iniciaPackage(kermitHuman *package)
 
 // Reseta o pacote e libera espaço reservado na memória
 void resetPackage(kermitHuman *package)
-{
-  if( package->tam > 0 )
-    free(package->data);
+{  
+  free(package->data);
   package->inicio = -1;
   package->dest = -1;
   package->orig = -1;
@@ -41,21 +41,6 @@ void resetPackage(kermitHuman *package)
   package->tipo = -1;
   package->par = -1;
   package->data = NULL;
-}
-
-// Espera o pacote com o inicio 01111110 ser recebido
-int waitPackage(kermitHuman *package, int soquete)
-{
-  resetPackage(package);
-  
-  while( package->inicio != 126 )
-  {
-    resetPackage(package);
-    if( receivePackage(package, soquete) < 0 )
-      return(-1);
-  }
-  
-  return 1;
 }
 
 // Prepara e envia o buffer
@@ -74,17 +59,14 @@ int sendPackage(kermitHuman *package, int soquete)
   // insere sequencia e tipo no 3° byte
   packageBit.header[2] = (unsigned char) ((package->seq << 4) | package->tipo);
 
-  if( package->tam > 0 )
+  if( (package->tam > 0) )
   {
-    memcpy(packageBit.data, package->data, package->tam);    
+    package->data[package->tam] = '\0';
+    memcpy(packageBit.data, package->data, package->tam);
   }
 
-  // Calcula a paridade
-  /*package->par = (unsigned char) packageBit.header[1] ^ packageBit.header[2];
-  for (int i = 0; i < package->tam; i++)  
-    package->par = (unsigned char) package->par ^ packageBit.data[i];*/
-
-  packageBit.data[package->tam] = (unsigned char) package->par;
+  packageBit.data[package->tam] = (unsigned char) geraPar(&packageBit, package->tam);
+  package->par = (unsigned char) packageBit.data[package->tam];
 
   memcpy(buffer, (unsigned char *) packageBit.header, 3);
   memcpy(buffer+3, (unsigned char *) packageBit.data, package->tam+1);
@@ -95,7 +77,13 @@ int sendPackage(kermitHuman *package, int soquete)
     return(-1);
   }
 
-  read(soquete, buffer, TAM_PACKAGE);
+  // organiza file descriptor para timeout
+  struct pollfd fd;
+  fd.fd = soquete;
+  fd.events = POLLIN;
+
+  if( poll(&fd, 1, 1) )
+    read(soquete, buffer, TAM_PACKAGE);
 
   #ifdef DEBUG
   printf("\nENVIADO\n");
@@ -109,12 +97,26 @@ int sendPackage(kermitHuman *package, int soquete)
 }
 
 // Recebe o pacote
+// Retorna 0 em sucesso
 // Retorna -1 em caso de erro no recebimento
-// Retorna 1 em sucesso
-int receivePackage(kermitHuman *package, int soquete)
+// Retorna 1 caso detecte erro na paridade
+// Retorna 2 em timeout
+int receivePackage(kermitHuman *package, int destEsp, int soquete)
 {  
   unsigned char buffer[TAM_PACKAGE];
   memset(buffer, 0, TAM_PACKAGE);
+
+  // organiza file descriptor para timeout
+  struct pollfd fd;
+  fd.fd = soquete;
+  fd.events = POLLIN;
+  
+  // espera algum pacote, caso demore mais que TIMEOUT segundos, retorna 2
+  int retorno = poll(&fd, 1, TIMEOUT*1000);
+  if( retorno == 0 )
+    return 2;
+  else if( retorno < 0 )
+    return(-1);
 
   int tamBuffer = read(soquete, buffer, TAM_PACKAGE);
   if( tamBuffer == -1 )
@@ -129,6 +131,10 @@ int receivePackage(kermitHuman *package, int soquete)
   package->inicio = (unsigned char) (packageBit->header[0]); 
   // coleta os dois bits mais significativos do 2° byte, onde está o end. destino
   package->dest = (unsigned char) (packageBit->header[1] & 0xc0) >> 6; 
+
+  if( (package->dest != destEsp) || (package->inicio != MARCA_INICIO) )
+    return receivePackage(package, destEsp, soquete);
+
   // coleta os 3° e 4° bits mais significativos do 2° byte, onde está o end. origem
   package->orig = (unsigned char) (packageBit->header[1] & 0x30) >> 4;
   // coleta os 4 bits menos significativos do 2° byte, onde está o tamanho
@@ -139,12 +145,15 @@ int receivePackage(kermitHuman *package, int soquete)
   // coleta os 4 bits menos significativos do 3° byte, onde está o tipo
   package->tipo = (unsigned char) packageBit->header[2] & 0x0F;
 
-  package->data = (unsigned char *) malloc(package->tam);
-  memcpy(package->data, packageBit->data, package->tam);
+  // se tem tamanho > 0, aloca espaço para guardar dados
+  package->data = NULL;
+  if( package->tam > 0 ){
+    package->data = (unsigned char *) malloc(package->tam);
+    memcpy(package->data, packageBit->data, package->tam);
+    package->data[package->tam] = '\0';
+  }
 
   package->par = (unsigned char) packageBit->data[package->tam];
-
-  read(soquete, buffer, TAM_PACKAGE);
 
   #ifdef DEBUG
   if(package->dest != 0){
@@ -156,19 +165,23 @@ int receivePackage(kermitHuman *package, int soquete)
   }
   #endif
 
-  return 1;
+  if( geraPar(packageBit, package->tam) != package->par )
+    return 1;
+
+  if( poll(&fd, 1, 1) )
+    read(soquete, buffer, TAM_PACKAGE);
+
+  return 0;
 }
 
-// Checa a paridade do pacote
-int checaParidade(kermitHuman *package)
+// Gera paridade
+unsigned char geraPar(struct kermitBit *packageBit, int tam)
 {
-  /*unsigned char paridade = packageBit->header[1] ^ packageBit->header[2];
-  for (int i = 0; i < package->tam; i++)  
-    paridade = paridade ^ packageBit->data[i];  
-  if( paridade != packageBit->data[package->tam] )
-    return 0;*/
+  unsigned char paridade = packageBit->header[1] ^ packageBit->header[2];
+  for (int i = 0; i < tam; i++)  
+    paridade = paridade ^ packageBit->data[i];
 
-  return 1;
+  return paridade;
 }
 
 // Envia mensagem de acknowledge
@@ -176,12 +189,12 @@ void sendACK(int dest, int orig, int *seq, int soquete)
 {  
   kermitHuman package;
 
-  package.inicio = 126;
+  package.inicio = MARCA_INICIO;
   package.dest = dest;
   package.orig = orig;
   package.tam = 0;
   package.seq = *seq;
-  package.tipo = 8;
+  package.tipo = ACK;
   package.par = 0;
   package.data = NULL;
   
@@ -196,12 +209,12 @@ void sendNACK(int dest, int orig, int *seq, int soquete)
 {  
   kermitHuman package;
 
-  package.inicio = 126;
+  package.inicio = MARCA_INICIO;
   package.dest = dest;
   package.orig = orig;
   package.tam = 0;
   package.seq = *seq;
-  package.tipo = 9;
+  package.tipo = NACK;
   package.par = 0;
   package.data = NULL;
   
@@ -230,12 +243,12 @@ void sendError(int dest, int orig, int *seq, int tipo, int error, int soquete)
   package.data = malloc(1);
   package.data[0] = (unsigned char) (error_code & 0xff);
 
-  package.inicio = 126;
+  package.inicio = MARCA_INICIO;
   package.dest = dest;
   package.orig = orig;
   package.tam = 1;
   package.seq = *seq;
-  package.tipo = 15;
+  package.tipo = ERROR;
   package.par = 0;  
 
   if( sendPackage(&package, soquete) < 0 )
@@ -245,6 +258,15 @@ void sendError(int dest, int orig, int *seq, int tipo, int error, int soquete)
 
   free(package.data);
   package.data = NULL;
+}
+
+// Verifica se o pacote tem o destino e tipo esperado
+int ehPack(kermitHuman *package, int tipo)
+{
+  if( (package->tipo == tipo) )
+    return 1;
+
+  return 0;
 }
 
 // Imprime mensagem de erro

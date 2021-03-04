@@ -21,6 +21,10 @@ void comando_lls();
 
 /* COMANDOS EXTERNOS */
 
+// Comando exit
+// Sai do programa
+void comando_exit(int *seq, int soquete);
+
 // Comando cd - client side
 // Executa change directory no server
 void comando_cd(int *seq, int soquete);

@@ -32,39 +32,40 @@ int main()
   {
     resetPackage(&package);
 
-    if( receivePackage(&package, soquete) < 0 )
+    if( receivePackage(&package, 2, soquete) < 0 )
       exit(-1);
 
-    // Verifica se o destino é mesmo o servidor
-    if( package.dest == 2 )
+    // Verifica o tipo do package
+    // comando cd
+    if(package.tipo == 0)
     {
-      // Verifica o tipo do package
-      // comando cd
-      if(package.tipo == 0)
-      {
-        comando_cd(&package, &seq, soquete);
+      comando_cd(&package, &seq, soquete);
 
-      } else if (package.tipo == 1) // comando ls
-      {
-        comando_ls(&seq, soquete);
+    } else if (package.tipo == 1) // comando ls
+    {
+      comando_ls(&seq, soquete);
 
-      } else if (package.tipo == 2) // comando ver
-      {
-        comando_ver(&package, &seq, soquete);
+    } else if (package.tipo == 2) // comando ver
+    {
+      comando_ver(&package, &seq, soquete);
 
-      } else if (package.tipo == 3) // comando linha
-      {
-        comando_linha(&package, &seq, soquete);
+    } else if (package.tipo == 3) // comando linha
+    {
+      comando_linha(&package, &seq, soquete);
 
-      } else if (package.tipo == 4)  // comando linhas
-      {
-        comando_linhas(&package, &seq, soquete);
+    } else if (package.tipo == 4)  // comando linhas
+    {
+      comando_linhas(&package, &seq, soquete);
 
-      } else if (package.tipo == 5)  // comando edit
-      {
-        printf("edit\n");
-      }
+    } else if (package.tipo == 5)  // comando edit
+    {
+      printf("edit\n");
+    } else if (package.tipo == 6)  // comando sair
+    {
+      resetPackage(&package);
+      return 0;
     }
+    
 
   }  
 

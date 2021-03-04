@@ -11,8 +11,18 @@
 #ifndef __KERMITPROTOCOL__
 #define __KERMITPROTOCOL__
 
+#define MARCA_INICIO 126  // marcador de inicio
+#define CLIENT 1        // endereço cliente
+#define SERVER 2        // endereço servidor
+#define ACK 8           // tipo do ACK
+#define NACK 9          // tipo do NACK
+#define LS_CONTENT 11   // tipo conteúdo ls
+#define FILE_CONTENT 12 // tipo conteúdo arquivo
+#define EOT 13          // tipo do EOT
+#define ERROR 15        // tipo error
 #define TAM_PACKAGE 19  // tamanho máximo do pacote, em bytes
 #define TAM_DATA 15     // tamanho máximo do campo de dados, em bytes
+#define TIMEOUT 5       // timeout em segundos
 
 // Buffer kermit package
 struct kermitBit
@@ -40,20 +50,18 @@ void iniciaPackage(kermitHuman *package);
 // Reseta o pacote e libera espaço reservado na memória
 void resetPackage(kermitHuman *package);
 
-// Espera o pacote ser recebido
-int waitPackage(kermitHuman *package, int soquete);
-
 // Prepara e envia o pacote
 int sendPackage(kermitHuman *package, int soquete);
 
 // Recebe o pacote
+// Retorna 0 em sucesso
 // Retorna -1 em caso de erro no recebimento
-// Retorna 0 caso não cheque a paridade
-// Retorna 1 em sucesso
-int receivePackage(kermitHuman *package, int soquete);
+// Retorna 1 caso detecte erro na paridade
+// Retorna 2 em timeout
+int receivePackage(kermitHuman *package, int destEsp, int soquete);
 
-// Checa a paridade do pacote
-int checaParidade(kermitHuman *package);
+// Gera paridade
+unsigned char geraPar(struct kermitBit *packageBit, int tam);
 
 // Envia mensagem de acknowledge
 void sendACK(int dest, int orig, int *seq, int soquete);
@@ -63,6 +71,9 @@ void sendNACK(int dest, int orig, int *seq, int soquete);
 
 // Envia mensagem de error
 void sendError(int dest, int orig, int *seq, int tipo, int error, int soquete);
+
+// Verifica se o pacote tem o tipo esperado
+int ehPack(kermitHuman *package, int tipo);
 
 // Imprime mensagem de erro
 void printError(kermitHuman *package);

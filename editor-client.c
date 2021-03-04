@@ -69,7 +69,8 @@ int main()
 
     } else if (strncmp(comando, "exit", 4) == 0)
     {
-      printf("Finalizando client\n");
+      printf("Finalizando client e server\n");
+      comando_exit(&seq, soquete);
       return 1;
     } else {
       printf("%s é um comando inválido!\n", comando);
