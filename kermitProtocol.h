@@ -16,6 +16,7 @@
 #define SERVER 2        // endereço servidor
 #define ACK 8           // tipo do ACK
 #define NACK 9          // tipo do NACK
+#define LINE_NUMBER 10  // tipo linha inicial e final
 #define LS_CONTENT 11   // tipo conteúdo ls
 #define FILE_CONTENT 12 // tipo conteúdo arquivo
 #define EOT 13          // tipo do EOT
