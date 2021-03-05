@@ -276,8 +276,7 @@ void comando_linha(kermitHuman *package, int *seq, int soquete)
     // se o retorno for timeout, erro de paridade
     // ou se o pacote for NACK, envia o pacote novamente
     if( (retorno > 0) || ehPack(&packageRec, NACK) ){
-      if( sendPackage(&packageSend, soquete) < 0 )
-        exit(-1);
+      sendACK(package->orig, package->dest, seq, soquete);
     }
     
   }
@@ -312,7 +311,7 @@ void comando_linha(kermitHuman *package, int *seq, int soquete)
       memcpy(packageSend.data, str, packageSend.tam);
 
       if( sendPackage(&packageSend, soquete) < 0 )
-            exit(-1);
+        exit(-1);
 
       resetPackage(&packageRec);
       // espera receber o ACK
@@ -398,13 +397,9 @@ void comando_linha(kermitHuman *package, int *seq, int soquete)
 // Mostra as linhas entre a <numero_linha_inicial> e <numero_linha_final> do arquivo <nome_arq>, que está no servidor, na tela do cliente.
 void comando_linhas(kermitHuman *package, int *seq, int soquete)
 {
-  /*kermitHuman packageSend, packageRec;
+  kermitHuman packageSend, packageRec;
 
   FILE *arquivo;
-  char str[TAM_DATA+1];
-  int espera, cont = 1;
-  unsigned int linha_inicial, linha_final;
-  iniciaPackage(&packageRec);
   
   // abre <ARQUIVO> no servidor
   arquivo = fopen((char*) package->data, "r");
@@ -415,19 +410,30 @@ void comando_linhas(kermitHuman *package, int *seq, int soquete)
 
   sendACK(package->orig, package->dest, seq, soquete);
 
-  // espera receber as linhas inicial e final
-  espera = 0;
-  while( !espera )
+  char str[TAM_DATA+1];
+  int retorno;
+
+  iniciaPackage(&packageRec);
+  // espera receber o número das linhas inicial e final
+  while( !ehPack(&packageRec, LINE_NUMBER) )
   {
     resetPackage(&packageRec);
 
-    if( waitPackage(&packageRec, soquete) == -1 ){
+    // espera receber pacote
+    retorno = receivePackage(&packageRec, SERVER, soquete);
+    if( retorno == -1 ){
       exit(-1);
-    } else if( (packageRec.dest == 2) && (packageRec.tipo == 10) ){
-      espera = 1;        
+    }
+
+    // se o retorno for timeout, erro de paridade
+    // ou se o pacote for NACK, envia o pacote novamente
+    if( (retorno > 0) || ehPack(&packageRec, NACK) ){
+      sendACK(package->orig, package->dest, seq, soquete);
     }
     
   }
+
+  unsigned int linha_inicial, linha_final, cont = 1;
 
   // pega bytes da esquerda e direita e transforma em unsigned int
   linha_inicial = (unsigned int) ((packageRec.data[0] << 8) | (packageRec.data[1]));
@@ -437,6 +443,8 @@ void comando_linhas(kermitHuman *package, int *seq, int soquete)
   if( linha_inicial < 1 )
   {
     sendError(package->orig, package->dest, seq, package->tipo, -1, soquete);
+    // Libera memória
+    resetPackage(&packageRec);
     return;
   }
 
@@ -446,7 +454,7 @@ void comando_linhas(kermitHuman *package, int *seq, int soquete)
     linha_final = 0;
 
   // encontra a linha inicial e começa o envio
-  while( (!feof(arquivo)) && ( (cont <= linha_final) || (linha_final == 0) ) ){
+  while( (!feof(arquivo)) && ( (cont <= linha_final) || (!linha_final) ) ){
     fgets(str, TAM_DATA+1, arquivo);
 
     if( cont >= linha_inicial )
@@ -457,23 +465,30 @@ void comando_linhas(kermitHuman *package, int *seq, int soquete)
       packageSend.orig = SERVER;
       packageSend.tam = strlen(str);
       packageSend.seq = *seq;
-      packageSend.tipo = 12;
+      packageSend.tipo = FILE_CONTENT;
       packageSend.data = malloc(packageSend.tam);
       memcpy(packageSend.data, str, packageSend.tam);
 
-      espera = 0;
-      while( !espera )
+      if( sendPackage(&packageSend, soquete) < 0 )
+        exit(-1);
+
+      resetPackage(&packageRec);
+      // espera receber o ACK
+      while( !ehPack(&packageRec, ACK) )
       {
         resetPackage(&packageRec);
-        // prepara e envia o buffer
-        if( sendPackage(&packageSend, soquete) == -1 )
-          exit(-1);
 
-        // espera receber o ACK ou NACK
-        if( waitPackage(&packageRec, soquete) == -1 ){
+        // espera receber pacote
+        retorno = receivePackage(&packageRec, packageSend.orig, soquete);
+        if( retorno == -1 ){
           exit(-1);
-        } else if( (packageRec.dest == 2) && (packageRec.tipo == 8) ){
-          espera = 1;        
+        } 
+
+        // se o retorno for timeout, erro de paridade
+        // ou se o pacote for NACK, envia o pacote novamente
+        if( (retorno > 0) || ehPack(&packageRec, NACK) ){
+          if( sendPackage(&packageSend, soquete) < 0 )
+            exit(-1);
         }
         
       }
@@ -491,6 +506,8 @@ void comando_linhas(kermitHuman *package, int *seq, int soquete)
   if( cont < linha_inicial )
   {
     sendError(package->orig, package->dest, seq, package->tipo, -1, soquete);
+    // Libera memória
+    resetPackage(&packageRec);
     return;
   }
 
@@ -500,25 +517,31 @@ void comando_linhas(kermitHuman *package, int *seq, int soquete)
   packageSend.orig = SERVER;
   packageSend.tam = 0;
   packageSend.seq = *seq;
-  packageSend.tipo = 13;
+  packageSend.tipo = EOT;
   free(packageSend.data);
   packageSend.data = NULL;
 
   // envia pacote de final de transmissão e aguarda ACK
-  espera = 0;
-  while( !espera )
+  if( sendPackage(&packageSend, soquete) < 0 )
+    exit(-1);
+  
+  resetPackage(&packageRec);
+  while( !ehPack(&packageRec, ACK) )
   {
     resetPackage(&packageRec);
-    // prepara e envia o buffer
-    if( sendPackage(&packageSend, soquete) == -1 )
-      exit(-1);
 
-    // espera receber o ACK ou NACK
-    if( waitPackage(&packageRec, soquete) == -1 ){
+    // espera receber pacote
+    retorno = receivePackage(&packageRec, packageSend.orig, soquete);
+    if( retorno == -1 ){
       exit(-1);
-    } else if( (packageRec.dest == 2) && (packageRec.tipo == 8) ){
-      espera = 1;        
-    }
+    } 
+
+    // se o retorno for timeout, erro de paridade
+    // ou se o pacote for NACK, envia o pacote novamente
+    if( (retorno > 0) || ehPack(&packageRec, NACK) ){
+      if( sendPackage(&packageSend, soquete) < 0 )
+        exit(-1);
+    } 
     
   }
 
@@ -526,6 +549,6 @@ void comando_linhas(kermitHuman *package, int *seq, int soquete)
 
   // Libera memória
   resetPackage(&packageSend);
-  resetPackage(&packageRec);*/
+  resetPackage(&packageRec);
 
 }
