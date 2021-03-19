@@ -65,7 +65,7 @@ int main()
 
     } else if (strncmp(comando, "edit", 4) == 0)
     {
-      printf("edit\n");
+      comando_edit(&seq, soquete);
 
     } else if (strncmp(comando, "exit", 4) == 0)
     {

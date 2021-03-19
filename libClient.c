@@ -676,3 +676,209 @@ void comando_linhas(int *seq, int soquete)
   resetPackage(&packageRec);
 
 }
+
+// Comando edit - client side
+// troca a linha <numero_linha> do arquivo <nome_arq>, que está no servidor, pelo texto <NOVO_TEXTO> que deve ser digitado entre aspas.
+void comando_edit(int *seq, int soquete)
+{
+  kermitHuman packageSend, packageRec;
+  int retorno;
+
+  unsigned int linha;
+  scanf("%d", &linha);  
+  
+  char arq[TAM_DATA+1];
+  scanf("%s", arq);
+  arq[TAM_DATA] = '\0';
+
+  char novo_texto[TAM_LINHA+1];
+  scanf(" \" %100[^\"] \"", novo_texto);
+  int tam_texto = strlen(novo_texto);
+
+  packageSend.inicio = MARCA_INICIO;
+  packageSend.dest = SERVER;
+  packageSend.orig = CLIENT;
+  packageSend.tam = strlen(arq);
+  packageSend.seq = *seq;
+  packageSend.tipo = 5;
+  packageSend.data = malloc(packageSend.tam);
+  memcpy(packageSend.data, arq, packageSend.tam);
+
+  if( sendPackage(&packageSend, soquete) < 0 )
+    exit(-1);
+
+  // quando tipo = ACK, sucesso no pacote inicial do comando edit
+  // quando tipo = ERROR, houve erro
+  iniciaPackage(&packageRec);
+  while( !ehPack(&packageRec, ACK) && !ehPack(&packageRec, ERROR) )
+  {
+    resetPackage(&packageRec);
+
+    // espera receber pacote
+    retorno = receivePackage(&packageRec, packageSend.orig, soquete);
+    if( retorno == -1 ){
+      exit(-1);
+    } 
+
+    // se o retorno for timeout, erro de paridade
+    // ou se o pacote for NACK, envia o pacote novamente
+    if( (retorno > 0) || ehPack(&packageRec, NACK) ){
+      if( sendPackage(&packageSend, soquete) < 0 )
+        exit(-1);
+    }
+  }
+
+  incrementaSeq(seq);
+
+  // caso tenha dado erro, finaliza a função
+  if( ehPack(&packageRec, ERROR) )
+  {
+    printError(&packageRec);
+    // Libera memória
+    resetPackage(&packageSend);
+    resetPackage(&packageRec);
+    return;
+  }
+
+  // ENVIANDO A LINHA
+
+  // envia a linha desejada
+  packageSend.inicio = MARCA_INICIO;
+  packageSend.dest = SERVER;
+  packageSend.orig = CLIENT;
+  packageSend.tam = 2;    // tamanho necessário para armazenar UM inteiro
+  packageSend.seq = *seq;
+  packageSend.tipo = LINE_NUMBER;
+  // aloca espaço para dados e insere os bytes dos numeros inteiros
+  packageSend.data = malloc(packageSend.tam);
+  // pega bytes da esquerda e direita e transforma em unsigned char
+  packageSend.data[0] = (unsigned char) ((linha >> 8) & 0xff); 
+  packageSend.data[1] = (unsigned char) (linha & 0xff);
+
+  if( sendPackage(&packageSend, soquete) < 0 )
+    exit(-1);
+
+  // enquanto a chegada não for um pacote de ACK ou de erro
+  // continua enviando o pacote de linha
+  resetPackage(&packageRec);
+  while( !ehPack(&packageRec, ACK) && !ehPack(&packageRec, ERROR) )
+  {
+    resetPackage(&packageRec);
+
+    // espera receber pacote
+    retorno = receivePackage(&packageRec, packageSend.orig, soquete);
+    if( retorno == -1 ){
+      exit(-1);
+    } 
+
+    // se o retorno for timeout, erro de paridade
+    // ou se o pacote for NACK, envia o pacote novamente
+    if( (retorno > 0) || ehPack(&packageRec, NACK) ){
+      if( sendPackage(&packageSend, soquete) < 0 )
+        exit(-1);
+    }
+  }
+
+  incrementaSeq(seq);
+
+  // se é pacote de erro, imprime erro e sai da função  
+  if( ehPack(&packageRec, ERROR) )
+  {
+    printError(&packageRec);
+    // Libera memória
+    resetPackage(&packageSend);
+    resetPackage(&packageRec);
+    return;
+  }  
+
+  // ENVIAR NOVO TEXTO
+  int pos = 0;
+  char str[TAM_DATA+1];  
+
+  while (pos < tam_texto)
+  {
+    memcpy(str, novo_texto+pos, TAM_DATA);
+    str[TAM_DATA] = '\0';
+    int tam_str = strlen(str);
+
+    pos += strlen(str);
+
+    // printf("pos: %d tam_texto: %d\n", pos, tam_texto);
+
+    // envia string   
+    packageSend.inicio = MARCA_INICIO;
+    packageSend.dest = SERVER;
+    packageSend.orig = CLIENT;
+    packageSend.tam = tam_str;
+    packageSend.seq = *seq;
+    packageSend.tipo = FILE_CONTENT;
+    packageSend.data = malloc(packageSend.tam);
+    memcpy(packageSend.data, str, packageSend.tam);
+
+    if( sendPackage(&packageSend, soquete) < 0 )
+      exit(-1);
+
+    resetPackage(&packageRec);
+    // espera receber o ACK
+    while( !ehPack(&packageRec, ACK) )
+    {
+      resetPackage(&packageRec);
+
+      // espera receber pacote
+      retorno = receivePackage(&packageRec, packageSend.orig, soquete);
+      if( retorno == -1 ){
+        exit(-1);
+      } 
+
+      // se o retorno for timeout, erro de paridade
+      // ou se o pacote for NACK, envia o pacote novamente
+      if( (retorno > 0) || ehPack(&packageRec, NACK) ){
+        if( sendPackage(&packageSend, soquete) < 0 )
+          exit(-1);
+      }
+      
+    }
+
+    incrementaSeq(seq);
+  }
+
+  // prepara o pacote de final de transmissão
+  packageSend.inicio = MARCA_INICIO;
+  packageSend.dest = SERVER;
+  packageSend.orig = CLIENT;
+  packageSend.tam = 0;
+  packageSend.seq = *seq;
+  packageSend.tipo = EOT;
+  free(packageSend.data);
+  packageSend.data = NULL;
+
+  // envia pacote de final de transmissão e aguarda ACK
+  if( sendPackage(&packageSend, soquete) < 0 )
+    exit(-1);
+  
+  resetPackage(&packageRec);
+  while( !ehPack(&packageRec, ACK) )
+  {
+    resetPackage(&packageRec);
+
+    // espera receber pacote
+    retorno = receivePackage(&packageRec, packageSend.orig, soquete);
+    if( retorno == -1 ){
+      exit(-1);
+    } 
+
+    // se o retorno for timeout, erro de paridade
+    // ou se o pacote for NACK, envia o pacote novamente
+    if( (retorno > 0) || ehPack(&packageRec, NACK) ){
+      if( sendPackage(&packageSend, soquete) < 0 )
+        exit(-1);
+    } 
+    
+  }
+
+  incrementaSeq(seq);
+
+  // Libera memória
+  resetPackage(&packageSend);
+  resetPackage(&packageRec);
+}

@@ -11,6 +11,9 @@
 #ifndef __LIBCLIENT__
 #define __LIBCLIENT__
 
+// define a quantidade máxima de caracteres em uma linha em um arquivo de texto
+#define TAM_LINHA 100
+
 /* COMANDOS LOCAIS */
 
 // Comando change directory local
@@ -44,5 +47,9 @@ void comando_linha(int *seq, int soquete);
 // Comando linhas - client side
 // Mostra as linhas entre a <numero_linha_inicial> e <numero_linha_final> do arquivo <nome_arq>, que está no servidor, na tela do cliente.
 void comando_linhas(int *seq, int soquete);
+
+// Comando edit - client side
+// troca a linha <numero_linha> do arquivo <nome_arq>, que está no servidor, pelo texto <NOVO_TEXTO> que deve ser digitado entre aspas.
+void comando_edit(int *seq, int soquete);
 
 #endif

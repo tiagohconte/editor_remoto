@@ -59,7 +59,7 @@ int main()
 
     } else if (package.tipo == 5)  // comando edit
     {
-      printf("edit\n");
+      comando_edit(&package, &seq, soquete);
     } else if (package.tipo == 6)  // comando sair
     {
       resetPackage(&package);

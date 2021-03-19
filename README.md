@@ -21,11 +21,12 @@ _nome_arq_, que está no servidor, na tela do cliente.
 - `linhas <numero_linha_inicial> <numero_linha_final> <nome_arq>` - mostra as linhas
 entre a _numero_linha_inicial_ e _numero_linha_final_ do arquivo _nome_arq_, que
 está no servidor, na tela do cliente.
-
-## Comandos à implementar
 - `edit <numero_linha> <nome_arq> “<NOVO_TEXTO>”` – troca a linha _numero_linha_ do
 arquivo _nome_arq_, que está no servidor, pelo texto _NOVO_TEXTO_ que deve ser
 digitado entre aspas.
+
+## Comandos à implementar
+- nenhum :)
 
 ## Funcionalidades implementadas
 - Detecção de erros com Paridade Vertical
