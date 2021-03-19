@@ -279,6 +279,8 @@ void comando_ver(int *seq, int soquete)
   printf("%d ", linha++);
   // imprime o primeiro conteúdo recebido
   printf("%s", packageRec.data);
+  if( packageRec.data[strlen( (char*) packageRec.data )-1] == '\n' )
+    printf("%d ", linha++);
 
   // quando tipo = EOT, acabou a transmissão
   while( !ehPack(&packageRec, EOT) )
