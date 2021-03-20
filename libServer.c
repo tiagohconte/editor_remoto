@@ -658,7 +658,7 @@ void comando_edit(kermitHuman *package, int *seq, int soquete)
           buffer.linhas[linha-1] = (unsigned char *) realloc(buffer.linhas[linha-1], tam + packageRec.tam );
           memcpy(buffer.linhas[linha-1]+tam, packageRec.data, packageRec.tam);
           tam += packageRec.tam;
-          buffer.linhas[linha-1][tam] = '\0';
+          // buffer.linhas[linha-1][tam] = '\0';
 
           sendACK(packageRec.orig, packageRec.dest, seq, soquete);
 
@@ -671,6 +671,8 @@ void comando_edit(kermitHuman *package, int *seq, int soquete)
     
   }
 
+  buffer.linhas[linha-1][tam] = '\n';
+
   sendACK(packageRec.orig, packageRec.dest, seq, soquete);
 
   // reescreve ARQUIVO
@@ -678,7 +680,7 @@ void comando_edit(kermitHuman *package, int *seq, int soquete)
 
   for(int i = 0; i < buffer.num_linhas; i++)
   {
-    fprintf(arquivo, "%s\n", buffer.linhas[i]);
+    fprintf(arquivo, "%s", buffer.linhas[i]);
     free(buffer.linhas[i]);
     buffer.linhas[i] = NULL;
   }
@@ -730,13 +732,14 @@ int aloca_arq(FILE *arquivo, tad_texto *buffer)
       #endif
       return 0;
     }
-    str[tam_str-1] = '\0';
+    // printf("%s\n", str);
+    str[tam_str] = '\0';
     // copia a linha para o buffer
-    memcpy(buffer->linhas[buffer->num_linhas], str, tam_str);    
+    memcpy(buffer->linhas[buffer->num_linhas], str, tam_str+1);    
     buffer->num_linhas++;
   }
 
-  // #ifdef DEBUG
+  // #ifndef DEBUG
   // for(int i = 0; i < buffer->num_linhas; i++)
   //   printf("%s\n", buffer->linhas[i]);
   // #endif
