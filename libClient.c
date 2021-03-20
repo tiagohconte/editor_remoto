@@ -275,17 +275,18 @@ void comando_ver(int *seq, int soquete)
   incrementaSeq(&seqEsperada);
 
   // imprime número da primeira linha
-  int linha = 1;
+  int linha = 1, print_linha = 0;
   printf("%d ", linha++);
   // imprime o primeiro conteúdo recebido
   printf("%s", packageRec.data);
   if( packageRec.data[strlen( (char*) packageRec.data )-1] == '\n' )
-    printf("%d ", linha++);
+    print_linha = 1;
 
+  
   // quando tipo = EOT, acabou a transmissão
   while( !ehPack(&packageRec, EOT) )
   {  
-    resetPackage(&packageRec);
+    resetPackage(&packageRec);    
 
     // espera receber o pacote com conteúdo do arquivo
     retorno = receivePackage(&packageRec, packageSend.orig, soquete);
@@ -302,9 +303,13 @@ void comando_ver(int *seq, int soquete)
         if( packageRec.seq == seqEsperada )
         {      
           #ifndef DEBUG
+          if(print_linha){
+            printf("%d ", linha++);
+            print_linha = 0;
+          }
           printf("%s", packageRec.data);
           if( packageRec.data[strlen( (char*) packageRec.data )-1] == '\n' )
-            printf("%d ", linha++); 
+             print_linha = 1;
           #endif         
 
           sendACK(packageRec.orig, packageRec.dest, seq, soquete);
@@ -612,11 +617,13 @@ void comando_linhas(int *seq, int soquete)
     return;
   }
 
-  int linha = linha_inicial, imprime_linha = 0;
+  int linha = linha_inicial, print_linha = 0;
 
   #ifndef DEBUG
   printf("%d %s", linha++, packageRec.data);
   #endif 
+  if( packageRec.data[strlen( (char*) packageRec.data )-1] == '\n' )
+    print_linha = 1;
 
   // seta sequencia esperada e incrementa
   int seqEsperada = packageRec.seq;
@@ -644,11 +651,13 @@ void comando_linhas(int *seq, int soquete)
         if( packageRec.seq == seqEsperada )
         {         
           #ifndef DEBUG
-          if( imprime_linha ){
+          if(print_linha){
             printf("%d ", linha++);
-            imprime_linha = 0;
+            print_linha = 0;
           }
           printf("%s", packageRec.data);
+          if( packageRec.data[strlen( (char*) packageRec.data )-1] == '\n' )
+             print_linha = 1;
           #endif         
 
           sendACK(packageRec.orig, packageRec.dest, seq, soquete);
@@ -657,9 +666,7 @@ void comando_linhas(int *seq, int soquete)
         } else {
           sendNACK(packageRec.orig, packageRec.dest, seq, soquete);
         }
-
-        if( packageRec.data[packageRec.tam-1] == '\n' )
-          imprime_linha = 1;
+        
       }
     }    
 
