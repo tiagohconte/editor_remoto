@@ -93,6 +93,8 @@ void comando_ls(int *seq, int soquete)
 
   }
 
+  fclose(retorno_ls);
+
   // prepara o pacote de final de transmissão
   packageSend.inicio = MARCA_INICIO;
   packageSend.dest = CLIENT;
@@ -338,6 +340,8 @@ void comando_linha(kermitHuman *package, int *seq, int soquete)
 
       incrementaSeq(seq);
 
+      resetPackage(&packageSend);
+
     }
     
     if( str[strlen(str)-1] == '\n' )
@@ -499,6 +503,8 @@ void comando_linhas(kermitHuman *package, int *seq, int soquete)
 
       incrementaSeq(seq);
 
+      resetPackage(&packageSend);
+
     }
     
     if( str[strlen(str)-1] == '\n' )
@@ -658,7 +664,6 @@ void comando_edit(kermitHuman *package, int *seq, int soquete)
           buffer.linhas[linha-1] = (unsigned char *) realloc(buffer.linhas[linha-1], tam + packageRec.tam );
           memcpy(buffer.linhas[linha-1]+tam, packageRec.data, packageRec.tam);
           tam += packageRec.tam;
-          // buffer.linhas[linha-1][tam] = '\0';
 
           sendACK(packageRec.orig, packageRec.dest, seq, soquete);
 
@@ -732,7 +737,6 @@ int aloca_arq(FILE *arquivo, tad_texto *buffer)
       #endif
       return 0;
     }
-    // printf("%s\n", str);
     str[tam_str] = '\0';
     // copia a linha para o buffer
     memcpy(buffer->linhas[buffer->num_linhas], str, tam_str+1);    

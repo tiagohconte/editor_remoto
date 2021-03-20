@@ -44,6 +44,8 @@ void comando_lls()
     printf("%s", str);
     fgets(str, 15, retorno);       
   }
+
+  fclose(retorno);
 }
 
 /* COMANDOS EXTERNOS */
@@ -393,6 +395,7 @@ void comando_linha(int *seq, int soquete)
   }
 
   // envia a linha desejada
+  resetPackage(&packageSend);
   packageSend.inicio = MARCA_INICIO;
   packageSend.dest = SERVER;
   packageSend.orig = CLIENT;
@@ -565,6 +568,7 @@ void comando_linhas(int *seq, int soquete)
   }
 
   // envia as linhas desejadas
+  resetPackage(&packageSend);
   packageSend.inicio = MARCA_INICIO;
   packageSend.dest = SERVER;
   packageSend.orig = CLIENT;
@@ -752,6 +756,7 @@ void comando_edit(int *seq, int soquete)
   // ENVIANDO A LINHA
 
   // envia a linha desejada
+  resetPackage(&packageSend);
   packageSend.inicio = MARCA_INICIO;
   packageSend.dest = SERVER;
   packageSend.orig = CLIENT;
@@ -812,9 +817,8 @@ void comando_edit(int *seq, int soquete)
 
     pos += strlen(str);
 
-    // printf("pos: %d tam_texto: %d\n", pos, tam_texto);
-
     // envia string   
+    resetPackage(&packageSend);
     packageSend.inicio = MARCA_INICIO;
     packageSend.dest = SERVER;
     packageSend.orig = CLIENT;
